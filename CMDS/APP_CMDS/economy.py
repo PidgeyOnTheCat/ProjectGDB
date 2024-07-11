@@ -912,7 +912,5 @@ class Economy(commands.Cog):
 
         await interaction.response.send_message(embed=embedMain, view=viewMain, ephemeral=True)
 
-
-
 async def setup(bot):
     await bot.add_cog(Economy(bot))

@@ -121,9 +121,20 @@ class Uncathegorized(commands.Cog):
         else:
             await interaction.response.send_message("Tails")
 
-    @app_commands.command(name="socials", description="fuck")
+    @app_commands.command(name="socials", description="Sends PidgeyCat's socials because he's cool.")
     async def Socials(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"Sub to PidegyCat here : https://www.youtube.com/@pidgeycat\nFollow my PidgeyCat's Insta here : https://www.instagram.com/pidgeycatalt\nListen to PidgeyCat's spotify playlist here (he loves jack harlow) : https://open.spotify.com/playlist/7DXCaWLuYiPpOc8sBnEhM8?si=5b9f944a15be4932")
+
+    @app_commands.command(name="csfinder", description="Finds and checks the Counter-Strike 2 account you are looking for.")
+    async def csfinder(self, interaction: discord.Interaction, steamid: str):
+        steamid64 = convert_url(steamid)
+        if steamid64:
+            faceit_url = f'https://faceitfinder.com/profile/{steamid64}'
+            leetify_url = f'https://leetify.com/app/profile/{steamid64}'
+
+            await interaction.response.send_message(f"SteamID64: `{steamid64}`\n[Faceit Profile]({faceit_url})\n[Leetify Profile]({leetify_url})")
+        else:
+            await interaction.response.send_message("Failed to resolve SteamID64.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Uncathegorized(bot))
