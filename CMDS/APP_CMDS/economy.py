@@ -73,8 +73,9 @@ class Economy(commands.Cog):
                 level += 1
 
                 if level % 5 == 0:
-                    skillpointsamount = level / 5
-                    skillpointsamount = int(skillpointsamount)
+                    #skillpointsamount = level / 5
+                    #skillpointsamount = int(skillpointsamount)
+                    skillpointsamount = 1
                     skillpoints += skillpointsamount
                     await message.channel.send(f"{author.mention} has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!")
                 else:
@@ -145,8 +146,9 @@ class Economy(commands.Cog):
                 level += 1
 
                 if level % 5 == 0:
-                    skillpointsamount = level / 5
-                    skillpointsamount = int(skillpointsamount)
+                    #skillpointsamount = level / 5
+                    #skillpointsamount = int(skillpointsamount)
+                    skillpointsamount = 1
                     skillpoints += skillpointsamount
                     await ctx.send(f"{member.mention} has paid {money_required} and has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!!")
                 else:
@@ -836,7 +838,7 @@ class Economy(commands.Cog):
                 nonlocal skillpoints, skill_robfull_lvl
 
                 if skillpoints > 0:
-                    if skill_robfull_lvl < 5:
+                    if skill_robfull_lvl <= 5:
                         skillpoints -= 1
                         skill_robfull_lvl += 1
                         
@@ -847,6 +849,7 @@ class Economy(commands.Cog):
                             await self.bot.db.commit()
 
                         # Refresh everything
+                        levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
                         embedMain.description = f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`"
                         embedRobbing.description = f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`"
                         await interaction.response.edit_message(embed=embedRobbing, view=viewRobbing)
@@ -860,7 +863,7 @@ class Economy(commands.Cog):
                 nonlocal skillpoints, skill_robchance_lvl
 
                 if skillpoints > 0:
-                    if skill_robfull_lvl < 5:
+                    if skill_robchance_lvl <= 5:
                         skillpoints -= 1
                         skill_robchance_lvl += 1
                         
@@ -871,6 +874,7 @@ class Economy(commands.Cog):
                             await self.bot.db.commit()
 
                         # Refresh everything
+                        levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
                         embedMain.description = f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`"
                         embedRobbing.description = f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`"
                         await interaction.response.edit_message(embed=embedRobbing, view=viewRobbing)
@@ -884,7 +888,7 @@ class Economy(commands.Cog):
                 nonlocal skillpoints, skill_heistchance_lvl
 
                 if skillpoints > 0:
-                    if skill_robfull_lvl < 5:
+                    if skill_heistchance_lvl <= 5:
                         skillpoints -= 1
                         skill_heistchance_lvl += 1
                         
@@ -895,6 +899,7 @@ class Economy(commands.Cog):
                             await self.bot.db.commit()
 
                         # Refresh everything
+                        levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
                         embedMain.description = f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`"
                         embedRobbing.description = f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`"
                         await interaction.response.edit_message(embed=embedRobbing, view=viewRobbing)

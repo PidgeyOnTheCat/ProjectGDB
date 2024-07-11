@@ -16,5 +16,6 @@ nword_list = [
     'nigga',
     'neger',
     'necher',
-    'n1gger'
+    'n1gger',
+    'negro',
 ]
