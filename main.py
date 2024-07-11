@@ -35,5 +35,3 @@ async def main():
         await bot.start(TOKEN)
 
 asyncio.run(main())
-
-# v0.1.0

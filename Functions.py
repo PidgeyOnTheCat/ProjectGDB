@@ -1,5 +1,4 @@
 import requests, random
-from config import *
 
 def get_truth():
     # Send a GET request to the API
@@ -63,31 +62,3 @@ def get_insult():
     data = response.json()
     insult = data.get("insult")
     return insult
-
-def get_steamid64(vanity_url):
-    base_url = 'http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/'
-    params = {
-        'key': STEAM_API_KEY,
-        'vanityurl': vanity_url
-    }
-    
-    response = requests.get(base_url, params=params)
-    data = response.json()
-    
-    if data['response']['success'] == 1:
-        return data['response']['steamid']
-    else:
-        return None
-
-def convert_url(url):
-    if 'steamcommunity.com/profiles/' in url:
-        # Extract the SteamID64 directly from the URL
-        steamid64 = url.split('/')[-1] if url.endswith('/') else url.split('/')[-1]
-    elif 'steamcommunity.com/id/' in url:
-        # Extract the vanity URL and resolve to SteamID64
-        vanity_url = url.split('/')[-2] if url.endswith('/') else url.split('/')[-1]
-        steamid64 = get_steamid64(vanity_url)
-    else:
-        steamid64 = None
-    
-    return steamid64
