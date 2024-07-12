@@ -140,7 +140,12 @@ class Economy(commands.Cog):
 
             xp_required = (level + 1) * 100
             money_required = xp_required - xp
-            money_required *= 10
+
+            # Make it cost 5 times more money to level up past lvl 100
+            if level <= 100:
+                money_required *= 10
+            else:
+                money_required *= 50
 
             if money >= money_required:
                 level += 1

@@ -10,6 +10,9 @@ from config import *
 
 import aiosqlite, asyncio, random
 
+import openai
+openai.api_key = OPENAI_API_KEY
+
 class Uncathegorized(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -135,6 +138,34 @@ class Uncathegorized(commands.Cog):
             await interaction.response.send_message(f"SteamID64: `{steamid64}`\n[Faceit Profile]({faceit_url})\n[Leetify Profile]({leetify_url})")
         else:
             await interaction.response.send_message("Failed to resolve SteamID64.", ephemeral=True)
+
+    @app_commands.command(name="choose", description="Choses one of 2 things.")
+    async def choose(self, interaction: discord.Interaction, thing1: str, thing2: str):
+        if random.randint(1, 2) == 1:
+            await interaction.response.send_message(f"I choose {thing1}.")
+        else:
+            await interaction.response.send_message(f"I choose {thing2}.")
+
+    @app_commands.command(name="chatgpt", description="Gives ChatGPT a prompt.")
+    async def chatgpt(self, interaction: discord.Interaction, prompt: str):
+        await interaction.response.defer()  # Defer the response to indicate processing
+
+        try:
+            # Make a request to the OpenAI API
+            response = openai.Completion.create(
+                model="gpt-3.5-turbo",  # You can use the appropriate model here
+                prompt=prompt,
+                max_tokens=150
+            )
+
+            # Extract the text from the response
+            result = response.choices[0].text.strip()
+
+            # Send the result back to the user
+            await interaction.followup.send(result)
+        except Exception as e:
+            # Handle exceptions (e.g., API errors)
+            await interaction.followup.send(f"An error occurred: {str(e)}")
 
 async def setup(bot):
     await bot.add_cog(Uncathegorized(bot))
