@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 
 import aiosqlite, asyncio, random
@@ -102,6 +102,61 @@ class Economy(commands.Cog):
 
             await self.bot.db.commit()
             await self.bot.process_commands(message)
+
+    # Make users in voice calls get xp every minute
+    @tasks.loop(minutes=1)
+    async def update_xp(self):
+        for guild in self.bot.guilds:
+            for voice_channel in guild.voice_channels:
+                for member in voice_channel.members:
+                    if not member.bot:
+                        await self.give_xp(member, guild)
+        
+    async def give_xp(self, member, guild):
+        async with self.bot.db.cursor() as cursor:
+            await cursor.execute("SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, guild.id))
+            result = await cursor.fetchone()
+            
+            if not result:
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, guild.id, 0, 0, 0, 0, 0))
+                await self.bot.db.commit()
+                xp = 0
+                level = 0
+                money = 0
+                bank = 0
+                nword = 0
+                skillpoints = 0
+            else:
+                xp, level, money, bank, nword, skillpoints = result
+
+            xp += random.randint(25, 40) # 25, 40 / 100, 10000   per minute
+            money += random.randint(30, 55) # 30, 55 / 1000, 10000   per minute
+
+            await cursor.execute("UPDATE levels SET xp = ?, money = ? WHERE user = ? AND guild = ?", (xp, money, member.id, guild.id))
+
+            xp_required = (level + 1) * 100
+
+            if xp >= xp_required:
+                level += 1
+                skillpointsamount = 1 if level % 5 == 0 else 0
+                skillpoints += skillpointsamount
+                xp = 0  # Reset XP after level up
+
+                await cursor.execute("UPDATE levels SET level = ?, xp = ?, skillpoints = ? WHERE user = ? AND guild = ?", (level, xp, skillpoints, member.id, guild.id))
+                
+                if skillpointsamount > 0:
+                    await member.send(f"Congratulations! You've leveled up to level {level} and gained {skillpointsamount} skill point(s)!")
+                else:
+                    await member.send(f"Congratulations! You've leveled up to level {level}!")
+
+            await self.bot.db.commit()
+
+    @update_xp.before_loop
+    async def before_update_xp(self):
+        await self.bot.wait_until_ready()
+
+    def cog_unload(self):
+        self.update_xp.cancel()
 
     # Define all of the app commands
     @app_commands.command(name="levelup", description="Level up by paying money.")
