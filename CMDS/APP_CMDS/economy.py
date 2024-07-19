@@ -12,15 +12,20 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        # stats the voice call xp giver
+        self.update_xp.start()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("economy.py has loaded succesfully")
-
+        
         # level database stuff
         setattr(self.bot, "db", await aiosqlite.connect("BotData\stats.db"))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
             await cursor.execute("CREATE TABLE IF NOT EXISTS levels (level INTEGER, xp INTEGER, money INTEGER, bank INTEGER, user INTEGER, guild INTEGER, nword INTEGER, skillpoints INTEGER, skill_robfull_lvl INTEGER, skill_robchance_lvl INTEGER, skill_heistchance_lvl INTEGER)")
+
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
@@ -104,13 +109,14 @@ class Economy(commands.Cog):
             await self.bot.process_commands(message)
 
     # Make users in voice calls get xp every minute
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=1.0)
     async def update_xp(self):
         for guild in self.bot.guilds:
             for voice_channel in guild.voice_channels:
                 for member in voice_channel.members:
                     if not member.bot:
                         await self.give_xp(member, guild)
+                        print(f"given {member} xp")
         
     async def give_xp(self, member, guild):
         async with self.bot.db.cursor() as cursor:
@@ -145,18 +151,13 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET level = ?, xp = ?, skillpoints = ? WHERE user = ? AND guild = ?", (level, xp, skillpoints, member.id, guild.id))
                 
                 if skillpointsamount > 0:
-                    await member.send(f"Congratulations! You've leveled up to level {level} and gained {skillpointsamount} skill point(s)!")
+                    #await member.send(f"Congratulations! You've leveled up to level {level} and gained {skillpointsamount} skill point(s)!")
+                    pass
                 else:
-                    await member.send(f"Congratulations! You've leveled up to level {level}!")
+                    #await member.send(f"Congratulations! You've leveled up to level {level}!")
+                    pass
 
             await self.bot.db.commit()
-
-    @update_xp.before_loop
-    async def before_update_xp(self):
-        await self.bot.wait_until_ready()
-
-    def cog_unload(self):
-        self.update_xp.cancel()
 
     # Define all of the app commands
     @app_commands.command(name="levelup", description="Level up by paying money.")
