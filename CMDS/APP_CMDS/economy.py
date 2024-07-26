@@ -20,11 +20,27 @@ class Economy(commands.Cog):
         print("economy.py has loaded succesfully")
         
         # level database stuff
-        setattr(self.bot, "db", await aiosqlite.connect("BotData\stats.db"))
+        setattr(self.bot, "db", await aiosqlite.connect("BotData/stats.db"))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
-            await cursor.execute("CREATE TABLE IF NOT EXISTS levels (level INTEGER, xp INTEGER, money INTEGER, bank INTEGER, user INTEGER, guild INTEGER, nword INTEGER, skillpoints INTEGER, skill_robfull_lvl INTEGER, skill_robchance_lvl INTEGER, skill_heistchance_lvl INTEGER)")
-
+            await cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS levels (
+                    level INTEGER, 
+                    xp INTEGER, 
+                    money INTEGER, 
+                    bank INTEGER, 
+                    user INTEGER, 
+                    guild INTEGER, 
+                    nword INTEGER, 
+                    skillpoints INTEGER, 
+                    skill_robfull_lvl INTEGER, 
+                    skill_robchance_lvl INTEGER, 
+                    skill_heistchance_lvl INTEGER
+                    skill_banksecurity_lvl INTEGER
+                )
+                """
+            )
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -47,7 +63,7 @@ class Economy(commands.Cog):
             skillpoints = await cursor.fetchone()
 
             if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, author.id, guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, author.id, guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.db.commit()
 
             try:
@@ -124,7 +140,7 @@ class Economy(commands.Cog):
             result = await cursor.fetchone()
             
             if not result:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.db.commit()
                 xp = 0
                 level = 0
@@ -178,7 +194,7 @@ class Economy(commands.Cog):
             skillpoints = await cursor.fetchone()
 
             if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
@@ -221,7 +237,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, member.id, ctx.guild.id))
             else:
-                await ctx.send(f"You don't have enough money for a new rank\nYou need {money_required} but you only have {money}", ephemeral=True)
+                await ctx.send(f"You don't have enough money for a levelup\nYou need {money_required} but you only have {money}", ephemeral=True)
 
         await self.bot.db.commit()
 
@@ -241,7 +257,7 @@ class Economy(commands.Cog):
             bank = await cursor.fetchone()
 
             if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
@@ -297,7 +313,7 @@ class Economy(commands.Cog):
             bank = await cursor.fetchone()
 
             if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
@@ -353,7 +369,7 @@ class Economy(commands.Cog):
                 bank = await cursor.fetchone()
 
                 if not xp or not level:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                     await self.bot.commit()
 
                 try:
@@ -395,7 +411,7 @@ class Economy(commands.Cog):
                 bank = await cursor.fetchone()
 
                 if not xp or not level:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                     await self.bot.commit()
 
                 try:
@@ -451,7 +467,7 @@ class Economy(commands.Cog):
             skillpoints = await cursor.fetchone()
 
             if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
@@ -503,7 +519,7 @@ class Economy(commands.Cog):
                     await self.bot.commit()
                 
                 if not moneymember:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                     await self.bot.commit()
 
                 try:
@@ -612,7 +628,7 @@ class Economy(commands.Cog):
                     await self.bot.commit()
                 
                 if not moneymember:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                     await self.bot.commit()
 
                 try:
@@ -685,7 +701,7 @@ class Economy(commands.Cog):
             money = await cursor.fetchone()
 
             if not money:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
@@ -717,7 +733,7 @@ class Economy(commands.Cog):
             money = await cursor.fetchone()
 
             if not money:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
@@ -757,7 +773,7 @@ class Economy(commands.Cog):
                     await self.bot.commit()
 
                 if not moneymember:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                     await self.bot.commit()
 
                 try:
@@ -793,7 +809,7 @@ class Economy(commands.Cog):
             money = await cursor.fetchone()
 
             if not money:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
@@ -834,6 +850,8 @@ class Economy(commands.Cog):
             skill_robchance_lvl = await cursor.fetchone()
             await cursor.execute("SELECT skill_heistchance_lvl FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
             skill_heistchance_lvl = await cursor.fetchone()
+            await cursor.execute("SELECT skill_heistchance_lvl FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
+            skill_banksecurity_lvl = await cursor.fetchone()
 
             if not xp or not level:
                 await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
@@ -844,18 +862,21 @@ class Economy(commands.Cog):
                 skill_robfull_lvl = skill_robfull_lvl[0]
                 skill_robchance_lvl = skill_robchance_lvl[0]
                 skill_heistchance_lvl = skill_heistchance_lvl[0]
+                skill_banksecurity_lvl = skill_banksecurity_lvl[0]
             except TypeError:
+                skill_banksecurity_lvl = 0
                 skillpoints = 0
                 skill_robfull_lvl = 0
                 skill_robchance_lvl = 0
                 skill_heistchance_lvl = 0
 
             levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
+            levelSecurity = skill_banksecurity_lvl
 
             # Discord embeds that shows the skill tree
             embedMain = discord.Embed(
                 title="Skill Category Tree",
-                description=f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`",
+                description=f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`\n**S**ecurity : `{levelSecurity}`",
                 color=discord.Color.blurple()
             )
             embedRobbing = discord.Embed(
@@ -863,35 +884,57 @@ class Economy(commands.Cog):
                 description=f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`",
                 color=discord.Color.red()
             )
+            embedSecurity = discord.Embed(
+                title="Security Category Tree",
+                description=f"Skillpoints : `{skillpoints}`\nLevel : `{levelSecurity}` \n\n",
+                color=discord.Color.green()
+            )
 
 
             # Make a view for the buttons
             viewMain = discord.ui.View(timeout=None)
             viewRobbing = discord.ui.View(timeout=None)
+            viewSecurity = discord.ui.View(timeout=None)
 
 
             # Robbing button skilltree
             button_robbing = discord.ui.Button(style=discord.ButtonStyle.red, label="R")
+            button_security = discord.ui.Button(style=discord.ButtonStyle.green, label="S")
 
             button_robbing1 = discord.ui.Button(style=discord.ButtonStyle.red, label="1")
             button_robbing2 = discord.ui.Button(style=discord.ButtonStyle.red, label="2")
             button_robbing3 = discord.ui.Button(style=discord.ButtonStyle.red, label="3")
+
+            button_security1 = discord.ui.Button(style=discord.ButtonStyle.green, label="1")
+            button_security2 = discord.ui.Button(style=discord.ButtonStyle.green, label="2")
+            button_security3 = discord.ui.Button(style=discord.ButtonStyle.green, label="3")
+
 
             button_back = discord.ui.Button(style=discord.ButtonStyle.red, label="Back")
 
 
             # Add the buttons to the view
             viewMain.add_item(button_robbing)
+            viewMain.add_item(button_security)
 
             viewRobbing.add_item(button_robbing1)
             viewRobbing.add_item(button_robbing2)
             viewRobbing.add_item(button_robbing3)
             viewRobbing.add_item(button_back)
 
+            viewSecurity.add_item(button_security1)
+            viewSecurity.add_item(button_security2)
+            viewSecurity.add_item(button_security3)
+            viewSecurity.add_item(button_back)
+
             # Make the callbacks for the buttons
             async def callback_robbing(interaction: discord.Interaction):
                 await interaction.response.send_message(embed=embedRobbing, view=viewRobbing, ephemeral=True)
             button_robbing.callback = callback_robbing
+
+            async def callback_security(interaction: discord.Interaction):
+                await interaction.response.send_message(embed=embedSecurity, view=viewSecurity, ephemeral=True)
+            button_security.callback = callback_security
 
 
             # Make the callbacks for using the skillpoints
@@ -977,6 +1020,22 @@ class Economy(commands.Cog):
             button_back.callback = callback_back
 
         await interaction.response.send_message(embed=embedMain, view=viewMain, ephemeral=True)
+
+    @app_commands.command(name="addcolumn")
+    @commands.has_permissions(administrator=True)
+    async def add_column(self, interaction: discord.Interaction, column_name: str):
+        async with self.bot.db.cursor() as cursor:
+            # Check if the column already exists
+            await cursor.execute("PRAGMA table_info(levels)")
+            columns = await cursor.fetchall()
+            column_names = [column[1] for column in columns]
+
+            if column_name in column_names:
+                await interaction.response.send_message(f"Column `{column_name}` already exists in the `levels` table.", ephemeral=True)
+            else:
+                await cursor.execute(f"ALTER TABLE levels ADD COLUMN {column_name} INTEGER DEFAULT 0")
+                await self.bot.db.commit()
+                await interaction.response.send_message(f"Column `{column_name}` has been added to the `levels` table.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Economy(bot))

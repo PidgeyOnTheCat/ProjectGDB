@@ -22,10 +22,27 @@ class Uncathegorized(commands.Cog):
         print("uncathegorized.py has loaded succesfully")
 
         # level database stuff
-        setattr(self.bot, "db", await aiosqlite.connect("BotData\stats.db"))
+        setattr(self.bot, "db", await aiosqlite.connect("BotData/stats.db"))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
-            await cursor.execute("CREATE TABLE IF NOT EXISTS levels (level INTEGER, xp INTEGER, money INTEGER, bank INTEGER, user INTEGER, guild INTEGER, nword INTEGER, skillpoints INTEGER, skill_robfull_lvl INTEGER, skill_robchance_lvl INTEGER, skill_heistchance_lvl INTEGER)")
+            await cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS levels (
+                    level INTEGER, 
+                    xp INTEGER, 
+                    money INTEGER, 
+                    bank INTEGER, 
+                    user INTEGER, 
+                    guild INTEGER, 
+                    nword INTEGER, 
+                    skillpoints INTEGER, 
+                    skill_robfull_lvl INTEGER, 
+                    skill_robchance_lvl INTEGER, 
+                    skill_heistchance_lvl INTEGER
+                    skill_banksecurity_lvl INTEGER
+                )
+                """
+            )
 
     @app_commands.command(name="hello", description="Says hi and mentions the user.")
     async def Hello(self, interaction: discord.Interaction):
@@ -106,7 +123,7 @@ class Uncathegorized(commands.Cog):
             nword = await cursor.fetchone()
 
             if not nword:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
                 await self.bot.commit()
 
             try:
