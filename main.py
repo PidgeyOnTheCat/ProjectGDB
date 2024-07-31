@@ -20,6 +20,8 @@ async def load():
     # Importing all of the cogs
     await bot.load_extension('CMDS.APP_CMDS.economy')
     await bot.load_extension('CMDS.APP_CMDS.uncathegorized')
+    await bot.load_extension('CMDS.APP_CMDS.voice')
+    
     
 
     # Load all the bot commands
@@ -30,6 +32,7 @@ async def load():
     # Unused bot commands
     # await bot.load_extension('CMDS.APP_CMDS.test')
     # await bot.load_extension('CMDS.APP_CMDS.moderation')
+    # await bot.load_extension('CMDS.APP_CMDS.console')
     
 
 async def main():
