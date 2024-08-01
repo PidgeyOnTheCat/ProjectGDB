@@ -1,2 +1,4 @@
 - Added a reload command to reload cogs while the bot is running
 - Added Security skill category
+- Added join / leave voice commands
+- Added soundboard command when in vc

@@ -38,7 +38,7 @@ class Uncathegorized(commands.Cog):
                     skillpoints INTEGER, 
                     skill_robfull_lvl INTEGER, 
                     skill_robchance_lvl INTEGER, 
-                    skill_heistchance_lvl INTEGER
+                    skill_heistchance_lvl INTEGER,
                     skill_banksecurity_lvl INTEGER
                 )
                 """

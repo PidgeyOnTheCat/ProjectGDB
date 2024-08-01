@@ -11,9 +11,6 @@ from config import *
 
 import aiosqlite, asyncio, random
 
-import openai
-openai.api_key = OPENAI_API_KEY
-
 class Console(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -28,7 +25,6 @@ class Console(commands.Cog):
         await self.bot.reload_extension(name=f"CMDS.APP_CMDS.{cog}")
         await interaction.response.send_message(f'{cog} cog reloaded', ephemeral=True)
         print(f"{cog} cog reloaded")
-
 
 async def setup(bot):
     await bot.add_cog(Console(bot))
