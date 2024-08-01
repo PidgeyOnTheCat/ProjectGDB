@@ -21,8 +21,7 @@ async def load():
     await bot.load_extension('CMDS.APP_CMDS.economy')
     await bot.load_extension('CMDS.APP_CMDS.uncathegorized')
     await bot.load_extension('CMDS.APP_CMDS.voice')
-    
-    
+    await bot.load_extension('CMDS.APP_CMDS.console')
 
     # Load all the bot commands
     await bot.load_extension('CMDS.APP_CMDS.tod')
@@ -32,7 +31,6 @@ async def load():
     # Unused bot commands
     # await bot.load_extension('CMDS.APP_CMDS.test')
     # await bot.load_extension('CMDS.APP_CMDS.moderation')
-    # await bot.load_extension('CMDS.APP_CMDS.console')
     
 
 async def main():
@@ -42,4 +40,4 @@ async def main():
 
 asyncio.run(main())
 
-# v0.4.1
+# v0.5.0

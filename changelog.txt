@@ -1,0 +1,2 @@
+- Added a reload command to reload cogs while the bot is running
+- Added Security skill category

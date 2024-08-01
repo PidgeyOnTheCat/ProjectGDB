@@ -1,4 +1,5 @@
 import random
+from typing import Literal
 
 import discord
 from discord.ext import commands
@@ -21,12 +22,12 @@ class Console(commands.Cog):
     async def on_ready(self):
         print("console.py has loaded succesfully")
 
-    @app_commands.command(name="load_cog", description="Loads a cog from a file while the bot is running. (admin command)")
+    @app_commands.command(name="reload", description="Reloads a cog while the bot is running. (admin command)")
     @commands.has_permissions(administrator=True)
-    async def load_cog(self, interaction: discord.Interaction, cog: str):
-        await self.bot.load_extension(f'CMDS.APP_CMDS.{cog}')
-        await interaction.response.send_message(f'{cog} cog loaded', ephemeral=True)
-        print(f"{cog} cog loaded")
+    async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','test','uncathegorized','voice']):
+        await self.bot.reload_extension(name=f"CMDS.APP_CMDS.{cog}")
+        await interaction.response.send_message(f'{cog} cog reloaded', ephemeral=True)
+        print(f"{cog} cog reloaded")
 
 
 async def setup(bot):

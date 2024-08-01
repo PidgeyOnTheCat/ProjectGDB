@@ -17,5 +17,14 @@ nword_list = [
     'neger',
     'necher',
     'n1gger',
-    'negro',
+    'negro'
+]
+
+cog_list = [
+    'console',
+    'economy',
+    'moderation',
+    'test',
+    'uncathegorized',
+    'voice'
 ]
