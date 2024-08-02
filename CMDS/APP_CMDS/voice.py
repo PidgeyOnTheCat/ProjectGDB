@@ -69,7 +69,7 @@ class Voice(commands.Cog):
         try:
             voice_client.stop()
             voice_client.play(discord.FFmpegOpusAudio(audio_path), after=lambda e: print(f"Error: {e}") if e else None)
-            await interaction.response.send_message(f"Playing `{sound}`.")
+            await interaction.response.send_message(f"Playing `{sound}`.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
 
