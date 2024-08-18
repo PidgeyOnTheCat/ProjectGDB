@@ -57,7 +57,7 @@ class Voice(commands.Cog):
         await interaction.response.send_message("Left the voice channel.", ephemeral=True)
 
     @app_commands.command(name="soundboard", description="Play a soundboard sound")
-    async def soundboard(self, interaction: discord.Interaction, sound: Literal['kys.wav', 'pipe.mp3', 'hilarious.wav']):
+    async def soundboard(self, interaction: discord.Interaction, sound: Literal['kys.wav', 'pipe.mp3', 'hilarious.wav', 'angry.mp3']):
         voice_client = interaction.guild.voice_client
 
         if voice_client is None or not voice_client.is_connected():
