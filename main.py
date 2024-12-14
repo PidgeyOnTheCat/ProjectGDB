@@ -3,8 +3,12 @@ from discord.ext import commands
 
 import asyncio
 
+import os
+
 from config import *
 from lists import *
+
+os.system('cls')
 
 bot = commands.Bot(command_prefix=">", intents=discord.Intents.all())
 
@@ -40,4 +44,4 @@ async def main():
 
 asyncio.run(main())
 
-# v0.5.1
+# v0.5.2
