@@ -1022,20 +1022,49 @@ class Economy(commands.Cog):
         await interaction.response.send_message(embed=embedMain, view=viewMain, ephemeral=True)
 
     @app_commands.command(name="addcolumn")
-    @commands.has_permissions(administrator=True)
     async def add_column(self, interaction: discord.Interaction, column_name: str):
-        async with self.bot.db.cursor() as cursor:
-            # Check if the column already exists
-            await cursor.execute("PRAGMA table_info(levels)")
-            columns = await cursor.fetchall()
-            column_names = [column[1] for column in columns]
+        if interaction.user.guild_permissions.administrator:
+            async with self.bot.db.cursor() as cursor:
+                # Check if the column already exists
+                await cursor.execute("PRAGMA table_info(levels)")
+                columns = await cursor.fetchall()
+                column_names = [column[1] for column in columns]
 
-            if column_name in column_names:
-                await interaction.response.send_message(f"Column `{column_name}` already exists in the `levels` table.", ephemeral=True)
-            else:
-                await cursor.execute(f"ALTER TABLE levels ADD COLUMN {column_name} INTEGER DEFAULT 0")
+                if column_name in column_names:
+                    await interaction.response.send_message(f"Column `{column_name}` already exists in the `levels` table.", ephemeral=True)
+                else:
+                    await cursor.execute(f"ALTER TABLE levels ADD COLUMN {column_name} INTEGER DEFAULT 0")
+                    await self.bot.db.commit()
+                    await interaction.response.send_message(f"Column `{column_name}` has been added to the `levels` table.", ephemeral=True)
+        else:
+            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
+
+    @app_commands.command(name="delcolumn")
+    async def delete_column(self, interaction: discord.Interaction, column_name: str):
+        if interaction.user.guild_permissions.administrator:
+            async with self.bot.db.cursor() as cursor:
+                # Check if the column exists
+                await cursor.execute("PRAGMA table_info(levels)")
+                columns = await cursor.fetchall()
+                column_names = [column[1] for column in columns]
+
+                if column_name not in column_names:
+                    await interaction.response.send_message(f"Column `{column_name}` does not exist in the `levels` table.", ephemeral=True)
+                    return
+
+                # SQLite does not support dropping columns directly, so we need to recreate the table
+                remaining_columns = [col for col in column_names if col != column_name]
+                columns_str = ", ".join(remaining_columns)
+
+                await cursor.execute("BEGIN TRANSACTION")
+                await cursor.execute(f"CREATE TABLE levels_new AS SELECT {columns_str} FROM levels")
+                await cursor.execute("DROP TABLE levels")
+                await cursor.execute("ALTER TABLE levels_new RENAME TO levels")
                 await self.bot.db.commit()
-                await interaction.response.send_message(f"Column `{column_name}` has been added to the `levels` table.", ephemeral=True)
+
+                await interaction.response.send_message(f"Column `{column_name}` has been deleted from the `levels` table.", ephemeral=True)
+        else:
+            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Economy(bot))
