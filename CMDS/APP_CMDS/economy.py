@@ -4,9 +4,15 @@ from discord import app_commands
 
 import aiosqlite, asyncio, random
 
-import config
-from config import *
 from lists import *
+
+from dotenv import load_dotenv
+import os
+
+# Load the environment variables
+load_dotenv()
+# Load the token from the .env file
+BOTDATA_FILE_PATH = os.getenv("BOTDATA_FILE_PATH")
 
 class Economy(commands.Cog):
     def __init__(self, bot):
@@ -20,7 +26,7 @@ class Economy(commands.Cog):
         print("economy.py has loaded succesfully")
         
         # level database stuff
-        setattr(self.bot, "db", await aiosqlite.connect("BotData/stats.db"))
+        setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
             await cursor.execute(

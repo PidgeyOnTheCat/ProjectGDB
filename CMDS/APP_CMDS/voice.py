@@ -7,9 +7,16 @@ from discord import app_commands
 
 from Functions import *
 from lists import *
-from config import *
 
 import aiosqlite, asyncio, random
+
+from dotenv import load_dotenv
+import os
+
+# Load the environment variables
+load_dotenv()
+# Load the token from the .env file
+BOTDATA_FILE_PATH = os.getenv("BOTDATA_FILE_PATH")
 
 class Voice(commands.Cog):
     def __init__(self, bot):
@@ -21,7 +28,6 @@ class Voice(commands.Cog):
 
     @app_commands.command(name="join", description="Joins the voice call that you are in currently.")
     async def join(self, interaction: discord.Interaction):
-        # Get the user who invoked the command and vc
         user = interaction.user
 
         # Check if the user is in a voice channel
@@ -30,14 +36,23 @@ class Voice(commands.Cog):
             return
 
         voice_channel = user.voice.channel
-
-        if interaction.guild.voice_client is not None:
-            await interaction.guild.voice_client.move_to(voice_channel, timeout=1)
-        else:
-            await voice_channel.connect(reconnect=True, timeout=1)
         
-        # Send a response to indicate the bot has joined
-        await interaction.response.send_message(f"Joined {voice_channel.name}", ephemeral=True)
+        try:
+            if interaction.guild.voice_client is not None:
+                # Bot is already in a voice channel
+                await interaction.guild.voice_client.move_to(voice_channel, timeout=10.0)
+            else:
+                # Bot is not in any voice channel
+                await voice_channel.connect(timeout=10.0, reconnect=True)
+                
+            await interaction.response.send_message(f"Joined {voice_channel.name}", ephemeral=True)
+            
+        except asyncio.TimeoutError:
+            await interaction.response.send_message("Connection timed out. Please try again.", ephemeral=True)
+        except discord.ClientException as e:
+            await interaction.response.send_message(f"Failed to join voice channel: {str(e)}", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"An unexpected error occurred: {str(e)}", ephemeral=True)
 
     @app_commands.command(name="disconnect", description="Leaves the voice call.")
     async def disconnect(self, interaction: discord.Interaction):
@@ -57,14 +72,29 @@ class Voice(commands.Cog):
         await interaction.response.send_message("Left the voice channel.", ephemeral=True)
 
     @app_commands.command(name="soundboard", description="Play a soundboard sound")
-    async def soundboard(self, interaction: discord.Interaction, sound: Literal['kys.wav', 'pipe.mp3', 'hilarious.wav', 'angry.mp3']):
+    @app_commands.describe(sound="The sound to play")
+    async def soundboard(self, interaction: discord.Interaction, sound: str):
+        # Get the current list of sounds
+        sounds_list = []
+        for sound_file in os.listdir(f'{BOTDATA_FILE_PATH}/Media/Audio'):
+            if sound_file.endswith((".wav", ".mp3")):
+                sounds_list.append(sound_file)
+        
+        # Validate the input
+        if sound not in sounds_list:
+            await interaction.response.send_message(
+                "Invalid sound choice. Use the autocomplete to select a valid sound.",
+                ephemeral=True
+            )
+            return
+
         voice_client = interaction.guild.voice_client
 
         if voice_client is None or not voice_client.is_connected():
             await interaction.response.send_message("I need to be in a voice channel to play audio.", ephemeral=True)
             return
 
-        audio_path = f'Media/Audio/{sound}'
+        audio_path = f'{BOTDATA_FILE_PATH}/Media/Audio/{sound}'
 
         try:
             voice_client.stop()
@@ -72,6 +102,27 @@ class Voice(commands.Cog):
             await interaction.response.send_message(f"Playing `{sound}`.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+
+    @soundboard.autocomplete("sound")
+    async def soundboard_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str
+    ) -> list[app_commands.Choice[str]]:
+        # Get the current list of sounds
+        sounds_list = []
+        for sound_file in os.listdir(f"{BOTDATA_FILE_PATH}/Media/Audio"):
+            if sound_file.endswith((".wav", ".mp3")):
+                sounds_list.append(sound_file)
+        
+        # Filter based on user input
+        filtered_sounds = [
+            app_commands.Choice(name=sound, value=sound)
+            for sound in sounds_list
+            if current.lower() in sound.lower()
+        ][:25]  # Discord limits to 25 choices
+        
+        return filtered_sounds
 
 async def setup(bot):
     await bot.add_cog(Voice(bot))

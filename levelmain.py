@@ -1,11 +1,15 @@
 import discord
 from discord.ext import commands
-from config import TOKEN
+from dotenv import load_dotenv
+import os
 import aiosqlite
 import random
 import asyncio
 
+load_dotenv()
 
+TOKEN = os.getenv("TOKEN")
+BOTDATA_FILE_PATH = os.getenv("BOTDATA_FILE_PATH")
 
 bot = commands.Bot(command_prefix=">", intents=discord.Intents.all())
 
@@ -14,7 +18,7 @@ async def on_ready():
     print(f'Succesfully logged in as {bot.user}\n_________________________________')
 
     # level database stuff
-    setattr(bot, "db", await aiosqlite.connect("UserData\level.db"))
+    setattr(bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
     await asyncio.sleep(3)
     async with bot.db.cursor() as cursor:
         await cursor.execute("CREATE TABLE IF NOT EXISTS levels (level INTEGER, xp INTEGER, user INTEGER, guild INTEGER, money INTEGER, bank INTEGER)")

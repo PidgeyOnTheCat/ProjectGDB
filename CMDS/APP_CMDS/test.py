@@ -6,7 +6,14 @@ from discord import app_commands
 
 from Functions import *
 from lists import *
-from config import *
+
+from dotenv import load_dotenv
+import os
+
+# Load the environment variables
+load_dotenv()
+# Load the token from the .env file
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 import aiosqlite, asyncio, random
 

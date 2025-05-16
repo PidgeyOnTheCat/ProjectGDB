@@ -3,3 +3,4 @@ discord.py
 openai
 Requests
 python-dotenv
+PyNaCl

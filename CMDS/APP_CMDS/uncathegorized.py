@@ -6,11 +6,20 @@ from discord import app_commands
 
 from Functions import *
 from lists import *
-from config import *
 
 import aiosqlite, asyncio, random
 
 import openai
+
+from dotenv import load_dotenv
+import os
+
+# Load the environment variables
+load_dotenv()
+# Load the token from the .env file
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+BOTDATA_FILE_PATH = os.getenv("BOTDATA_FILE_PATH")
+
 openai.api_key = OPENAI_API_KEY
 
 class Uncathegorized(commands.Cog):
@@ -22,7 +31,7 @@ class Uncathegorized(commands.Cog):
         print("uncathegorized.py has loaded succesfully")
 
         # level database stuff
-        setattr(self.bot, "db", await aiosqlite.connect("BotData/stats.db"))
+        setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
             await cursor.execute(

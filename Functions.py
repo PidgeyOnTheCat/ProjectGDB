@@ -1,5 +1,16 @@
+# This file contains functions that are used in the bot.
+# It includes functions for getting truths, dares, would you rather questions, memes, insults, and converting Steam URLs to SteamID64.
+
 import requests, random
-from config import *
+
+from dotenv import load_dotenv
+import os
+
+# Load the environment variables
+load_dotenv()
+# Load the token from the .env file
+STEAM_API_KEY = os.getenv("STEAM_API_KEY")
+
 
 def get_truth():
     # Send a GET request to the API

@@ -1,12 +1,16 @@
 import discord
 from discord.ext import commands
 
-import asyncio
-
+from dotenv import load_dotenv
 import os
 
-from config import *
-from lists import *
+import asyncio
+
+# Load the environment variables
+load_dotenv()
+
+# Load the token from the .env file
+TOKEN = os.getenv("TOKEN")
 
 os.system('cls')
 

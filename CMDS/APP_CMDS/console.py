@@ -7,7 +7,6 @@ from discord import app_commands
 
 from Functions import *
 from lists import *
-from config import *
 
 import aiosqlite, asyncio, random
 
