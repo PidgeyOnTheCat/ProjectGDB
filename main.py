@@ -48,4 +48,4 @@ async def main():
 
 asyncio.run(main())
 
-# v0.5.3
+# v0.6.0
