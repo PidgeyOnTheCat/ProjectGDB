@@ -498,7 +498,7 @@ class Economy(commands.Cog):
             await ctx.send(embed=em)
 
     @app_commands.command(name="pickpocket", description="Rob a user for their money.")
-    @commands.cooldown(1, hours_to_seconds(3), commands.BucketType.user)
+    @app_commands.checks.cooldown(1, hours_to_seconds(3), key=lambda i: (i.guild_id, i.user.id))
     async def pickpocket(self, interaction: discord.Interaction, member: discord.Member):
         ctx = await self.bot.get_context(interaction)
         robber = ctx.author
@@ -609,7 +609,7 @@ class Economy(commands.Cog):
             await interaction.response.send_message(str(error), ephemeral=True)
 
     @app_commands.command(name="heist", description="Rob a user for their bank money.")
-    @commands.cooldown(1, hours_to_seconds(12), commands.BucketType.user)
+    @app_commands.checks.cooldown(1, hours_to_seconds(12), key=lambda i: (i.guild_id, i.user.id)) # 24 hour cooldown
     async def heist(self, interaction: discord.Interaction, member: discord.Member):
         ctx = await self.bot.get_context(interaction)
         robber = ctx.author
