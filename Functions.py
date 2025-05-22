@@ -104,3 +104,6 @@ def convert_url(url):
         steamid64 = None
     
     return steamid64
+
+def hours_to_seconds(hours):
+    return hours * 60 * 60
