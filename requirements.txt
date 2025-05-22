@@ -4,3 +4,4 @@ openai
 Requests
 python-dotenv
 PyNaCl
+groq

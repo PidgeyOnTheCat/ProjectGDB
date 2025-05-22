@@ -12,7 +12,11 @@ load_dotenv()
 # Load the token from the .env file
 TOKEN = os.getenv("TOKEN")
 
-os.system('cls')
+try:
+    os.system('cls')
+except:
+    os.system('clear')
+
 
 bot = commands.Bot(command_prefix=">", intents=discord.Intents.all())
 
@@ -48,4 +52,4 @@ async def main():
 
 asyncio.run(main())
 
-# v0.6.0
+# v0.7.0

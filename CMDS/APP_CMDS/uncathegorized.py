@@ -9,7 +9,7 @@ from lists import *
 
 import aiosqlite, asyncio, random
 
-import openai
+from groq import Groq
 
 from dotenv import load_dotenv
 import os
@@ -17,10 +17,8 @@ import os
 # Load the environment variables
 load_dotenv()
 # Load the token from the .env file
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+AI_API_KEY = os.getenv("AI_API_KEY")
 BOTDATA_FILE_PATH = os.getenv("BOTDATA_FILE_PATH")
-
-openai.api_key = OPENAI_API_KEY
 
 class Uncathegorized(commands.Cog):
     def __init__(self, bot):
@@ -172,26 +170,31 @@ class Uncathegorized(commands.Cog):
         else:
             await interaction.response.send_message(f"I choose {thing2}.")
 
-    @app_commands.command(name="chatgpt", description="Gives ChatGPT a prompt.")
-    async def chatgpt(self, interaction: discord.Interaction, prompt: str):
-        await interaction.response.defer()  # Defer the response to indicate processing
+    @app_commands.command(name="ai", description="Prompt AI.")
+    async def ai(self, interaction: discord.Interaction, prompt: str):
+        # await interaction.response.defer()  # In case response takes a moment
 
+        client = Groq(api_key=AI_API_KEY)
         try:
-            # Make a request to the OpenAI API
-            response = openai.Completion.create(
-                model="gpt-3.5-turbo",  # You can use the appropriate model here
-                prompt=prompt,
-                max_tokens=150
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Your name is GDB. You are a discord bot. You are very funny and you like to joke around. You love dark humor. You are also very helpful and you like to help people. You write short answers."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model="llama-3.3-70b-versatile",
             )
+            response = chat_completion.choices[0].message.content
+            # print(f"user {interaction.user.name} prompted AI.")
+            await interaction.response.send_message(f"**{interaction.user.name} prompted:** *{prompt}*\n{response}")
 
-            # Extract the text from the response
-            result = response.choices[0].text.strip()
-
-            # Send the result back to the user
-            await interaction.followup.send(result)
         except Exception as e:
-            # Handle exceptions (e.g., API errors)
-            await interaction.followup.send(f"An error occurred: {str(e)}")
+            await interaction.response.send_message(f"Error: {str(e)}", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Uncathegorized(bot))
