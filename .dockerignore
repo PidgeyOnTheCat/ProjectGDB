@@ -1,4 +1,4 @@
 .env
 .git
-__pycache__
-gdb
+__pycache__*
+gdb/

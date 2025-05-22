@@ -1,23 +1,26 @@
-# Use Python 3.9 slim as the base image
-FROM python:3.9-slim
+# Use an official Python runtime as a parent image
+FROM python:3.12-slim
 
-# Set working directory inside the container
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy your requirements file and install dependencies
+# Install git for cloning the repository
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# Create a separate directory for the .env file
+RUN mkdir -p /config
+
+# Copy only the requirements file first to leverage Docker cache
 COPY requirements.txt .
+
+# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install FFmpeg
-RUN apt-get update && \
-    apt-get install -y ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
+# Create an entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Copy the rest of your bot's code
-COPY . .
+# Volume for persistent configuration
+VOLUME /config
 
-# Set environment variable (optional for cleaner logs)
-ENV PYTHONUNBUFFERED=1
-
-# Command to run your bot
-CMD ["python", "main.py"]
+ENTRYPOINT ["/entrypoint.sh"]
