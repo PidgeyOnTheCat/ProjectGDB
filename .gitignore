@@ -1,5 +1,5 @@
 .env
-.git
+**/.git/
 **/__pycache__/
 gdb/
 setupfiles/
