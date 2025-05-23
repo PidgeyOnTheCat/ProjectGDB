@@ -3,6 +3,10 @@
 
 import requests, random
 
+from lists import logTypes
+
+from datetime import datetime as dt
+
 from dotenv import load_dotenv
 import os
 
@@ -11,6 +15,13 @@ load_dotenv()
 # Load the token from the .env file
 STEAM_API_KEY = os.getenv("STEAM_API_KEY")
 
+
+# Main functions
+def Log(type, message):
+    try:
+        print(f"[{dt.now().strftime('%H:%M:%S')}] [ {logTypes[type]} ] {message}")
+    except Exception as e:
+        print(f"Error logging message: {e}")
 
 def get_truth():
     # Send a GET request to the API

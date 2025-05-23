@@ -6,6 +6,7 @@ from discord import app_commands
 
 from Functions import *
 from lists import *
+from version import botVersion
 
 import aiosqlite, asyncio, random
 
@@ -54,18 +55,27 @@ class Uncathegorized(commands.Cog):
     @app_commands.command(name="hello", description="Says hi and mentions the user.")
     async def Hello(self, interaction: discord.Interaction):
         await interaction.response.send_message(f'Hi {interaction.user.mention}! <:GDBemoji:1264147234983776297>', ephemeral=True)
+        Log(0, "Hello command used")
 
     @app_commands.command(name="ping", description="Responds with Pong.")
     async def Ping(self, interaction: discord.Interaction):
         await interaction.response.send_message('Pong!', ephemeral=True)
+        Log(0, "Ping command used")
+
+    @app_commands.command(name="version", description="Responds with the bot version.")
+    async def Version(self, interaction: discord.Interaction):
+        await interaction.response.send_message(f'Bot Version: {botVersion}', ephemeral=True)
+        Log(0, "Version command used")
 
     @app_commands.command(name="say", description="Says what you want it to say.")
-    async def Say(self, interaction: discord.Interaction, thing: str):
-        await interaction.response.send_message(thing)
+    async def Say(self, interaction: discord.Interaction, message: str):
+        await interaction.response.send_message(message)
+        Log(0, "Say command used")
 
     @app_commands.command(name="roll", description="Rolls a number from 1 to 6")
     async def Roll(self, interaction: discord.Interaction):
         await interaction.response.send_message(f'{random.randint(1,6)}')
+        Log(0, "Roll command used")
 
     @app_commands.command(name="kys", description="Send a death threat to someone :D")
     async def KYS(self, interaction: discord.Interaction, user: discord.Member, message: str = ""):
@@ -75,41 +85,25 @@ class Uncathegorized(commands.Cog):
         else:
             await interaction.response.send_message(f'{user.mention}' + threat + f'\n{message}' + '\n:regional_indicator_f::regional_indicator_r::fire:')
 
+        Log(0, "KYS command used")
+
     @app_commands.command(name="leak", description="Leak somebody's IP address for fun (not their actual IP)")
     async def Leak(self, interaction: discord.Interaction, user: discord.Member):
         ip_address = ".".join(str(random.randint(0, 255)) for _ in range(4))
         await interaction.response.send_message(content=f'{ip_address}\n{user.mention}, is this you?')
 
+        Log(0, "Leak command used")
+
     @app_commands.command(name="test", description="Test command")
+    @commands.has_permissions(administrator=True)
     async def Test(self, interaction: discord.Interaction):
-        if interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("Test")
-        else:
-            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
 
-    @app_commands.command(name="alerts", description="Turn message alerts on or off")
-    async def Alerts(self, interaction: discord.Interaction, choice: bool):
-        global Send_Alerts  # Declare Send_Alerts as global to modify the global variable
+        await interaction.response.send_message("Test")
 
-        if interaction.user.guild_permissions.administrator:
-            Send_Alerts = choice  # Update the global Send_Alerts variable
-            with open('config.py', 'r') as config_file:
-                config_lines = config_file.readlines()
-
-            for i, line in enumerate(config_lines):
-                if line.startswith("Send_Alerts"):
-                    config_lines[i] = f'Send_Alerts = {choice}\n'
-                    break
-
-            with open('config.py', 'w') as config_file:
-                config_file.writelines(config_lines)
-
-            if choice:
-                await interaction.response.send_message("Message alerts are now **on**", ephemeral=True)
-            else:
-                await interaction.response.send_message("Message alerts are now **off**", ephemeral=True)
-        else:
-            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
+        Log(0, "Test command used")
+        Log(1, "Test command used")
+        Log(2, "Test command used")
+        Log(3, "Test command used")
 
     @app_commands.command(name="roast", description="Roast someone. ( Why? )")
     async def Roast(self, interaction: discord.Interaction, user: discord.Member, mention: bool=True):
@@ -118,6 +112,8 @@ class Uncathegorized(commands.Cog):
             await interaction.response.send_message(f"{user.mention}" + f", {insult}")
         else:
             await interaction.response.send_message(f"{user}" + f", {insult}")
+
+        Log(0, "Roast command used")
 
     @app_commands.command(name="nword", description="Shows how many times a user has said the N-Word.")
     async def nword(self, interaction: discord.Interaction, member: discord.Member = None):
@@ -141,6 +137,8 @@ class Uncathegorized(commands.Cog):
             await ctx.send(f"{member.mention} has said the N-word **{nword}** times")
             await self.bot.db.commit()
 
+            Log(0, "NWord command used")
+
     @app_commands.command(name="coinflip", description="Flip a coin.")
     async def Coinflip(self, interaction: discord.Interaction):
         if random.randint(1, 2) == 1:
@@ -148,9 +146,13 @@ class Uncathegorized(commands.Cog):
         else:
             await interaction.response.send_message("Tails")
 
+        Log(0, "Coinflip command used")
+
     @app_commands.command(name="socials", description="Sends PidgeyCat's socials because he's cool.")
     async def Socials(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"Sub to PidegyCat here : https://www.youtube.com/@pidgeycat\nFollow my PidgeyCat's Insta here : https://www.instagram.com/pidgeycatalt\nListen to PidgeyCat's spotify playlist here (he loves jack harlow) : https://open.spotify.com/playlist/7DXCaWLuYiPpOc8sBnEhM8?si=5b9f944a15be4932")
+
+        Log(0, "Socials command used")
 
     @app_commands.command(name="csfinder", description="Finds and checks the Counter-Strike 2 account you are looking for.")
     async def csfinder(self, interaction: discord.Interaction, steamid: str):
@@ -160,8 +162,12 @@ class Uncathegorized(commands.Cog):
             leetify_url = f'https://leetify.com/app/profile/{steamid64}'
 
             await interaction.response.send_message(f"SteamID64: `{steamid64}`\n[Faceit Profile]({faceit_url})\n[Leetify Profile]({leetify_url})")
+
+            Log(0, "CSFinder command used")
         else:
             await interaction.response.send_message("Failed to resolve SteamID64.", ephemeral=True)
+
+            Log(2, "CSFinder Failed to resolve SteamID64")
 
     @app_commands.command(name="choose", description="Choses one of 2 things.")
     async def choose(self, interaction: discord.Interaction, thing1: str, thing2: str):
@@ -169,6 +175,8 @@ class Uncathegorized(commands.Cog):
             await interaction.response.send_message(f"I choose {thing1}.")
         else:
             await interaction.response.send_message(f"I choose {thing2}.")
+
+        Log(0, "Choose command used")
 
     @app_commands.command(name="ai", description="Prompt AI.")
     async def ai(self, interaction: discord.Interaction, prompt: str):
@@ -193,8 +201,11 @@ class Uncathegorized(commands.Cog):
             # print(f"user {interaction.user.name} prompted AI.")
             await interaction.response.send_message(f"**{interaction.user.name} prompted:** *{prompt}*\n{response}")
 
+            Log(0, f"AI command used by {interaction.user.name} with prompt: {prompt}")
+
         except Exception as e:
             await interaction.response.send_message(f"Error: {str(e)}", ephemeral=True)
+            Log(2, f"AI command failed with error: {str(e)}")
 
 async def setup(bot):
     await bot.add_cog(Uncathegorized(bot))

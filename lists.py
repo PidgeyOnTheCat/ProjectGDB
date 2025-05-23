@@ -1,3 +1,12 @@
+from colorama import Fore
+
+logTypes = [
+    Fore.GREEN + " INFO  " + Fore.RESET,
+    Fore.YELLOW + "WARNING" + Fore.RESET,
+    Fore.RED + " ERROR " + Fore.RESET,
+    Fore.WHITE + " DEBUG " + Fore.RESET
+]
+
 threats = [
     ", I think you should kill yourself. Honestly think about it.",
     ", In dieser sehr verstrickten Situation solltest du dir den Strick geben",

@@ -4,6 +4,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 
+from version import botVersion
+
 import asyncio
 
 # Load the environment variables
@@ -17,7 +19,6 @@ try:
 except:
     os.system('clear')
 
-
 bot = commands.Bot(command_prefix=">", intents=discord.Intents.all())
 
 @bot.event
@@ -25,8 +26,8 @@ async def on_ready():
     synced = await bot.tree.sync()
 
     print('---------------------------------')
-    print(f'Successfully synced {len(synced)} commands.')
-    print(f'Succesfully logged in as {bot.user}\n_________________________________')
+    print(f'successfully synced {len(synced)} commands.')
+    print(f'successfully logged in as {bot.user}\nBot version: {botVersion}\n_________________________________')
 
 async def load():
     # Importing all of the cogs
@@ -43,13 +44,32 @@ async def load():
     # Unused bot commands
     # await bot.load_extension('CMDS.APP_CMDS.test')
     # await bot.load_extension('CMDS.APP_CMDS.moderation')
-    
+
+async def startup():
+    print(
+        rf"""
+                    .----------------. .----------------. .----------------. 
+                    | .--------------. | .--------------. | .--------------. |
+                    | |    ______    | | |  ________    | | |   ______     | |
+                    | |  .' ___  |   | | | |_   ___ `.  | | |  |_   _ \    | |
+                    | | / .'   \_|   | | |   | |   `. \ | | |    | |_) |   | |
+                    | | | |    ____  | | |   | |    | | | | |    |  __'.   | |
+                    | | \ `.___]  _| | | |  _| |___.' / | | |   _| |__) |  | |
+                    | |  `._____.'   | | | |________.'  | | |  |_______/   | |
+                    | |              | | |              | | |              | |
+                    | '--------------' | '--------------' | '--------------' |
+                    '----------------' '----------------' '----------------' 
+        |  Made by: PidgeyCat | |  Version: {botVersion} | |  Discord: discord.gg/PBvj4AfUzr  |
+
+
+        """
+    )
+
 
 async def main():
     async with bot:
+        await startup()
         await load()
         await bot.start(TOKEN)
 
 asyncio.run(main())
-
-# v0.7.0

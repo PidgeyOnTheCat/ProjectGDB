@@ -30,6 +30,7 @@ async def Truth(interaction: discord.Interaction):
         description=f"{truth}",
         color=discord.Colour.green())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback Truth used")
 
     async def callback_dare(interaction: discord.Interaction):
         dare = get_dare()
@@ -38,6 +39,7 @@ async def Truth(interaction: discord.Interaction):
         description=f"{dare}",
         color=discord.Colour.red())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback Dare used")
 
     async def callback_wyr(interaction: discord.Interaction):
         wyr = get_wyr()
@@ -46,6 +48,7 @@ async def Truth(interaction: discord.Interaction):
         description=f"{wyr}",
         color=discord.Colour.blue())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback WYR used")
 
     # Give the buttons a function
     button_truth.callback = callback_truth
@@ -54,6 +57,7 @@ async def Truth(interaction: discord.Interaction):
 
     # Send the original message with the truth question and the button
     await interaction.response.send_message(embed=Embed, view=view)
+    Log(0, "Truth command used")
 
 @app_commands.command(name="dare", description="Returns a dare question.")
 async def Dare(interaction: discord.Interaction):
@@ -81,6 +85,7 @@ async def Dare(interaction: discord.Interaction):
         description=f"{truth}",
         color=discord.Colour.green())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback Truth used")
 
     async def callback_dare(interaction: discord.Interaction):
         dare = get_dare()
@@ -89,6 +94,7 @@ async def Dare(interaction: discord.Interaction):
         description=f"{dare}",
         color=discord.Colour.red())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback Dare used")
 
     async def callback_wyr(interaction: discord.Interaction):
         wyr = get_wyr()
@@ -97,6 +103,7 @@ async def Dare(interaction: discord.Interaction):
         description=f"{wyr}",
         color=discord.Colour.blue())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback WYR used")
 
     # Give the buttons a function
     button_truth.callback = callback_truth
@@ -105,6 +112,7 @@ async def Dare(interaction: discord.Interaction):
 
     # Send the original message with the truth question and the button
     await interaction.response.send_message(embed=Embed, view=view)
+    Log(0, "Dare command used")
 
 @app_commands.command(name="wyr", description="Returns a would you rather question.")
 async def WYR(interaction: discord.Interaction):
@@ -132,6 +140,7 @@ async def WYR(interaction: discord.Interaction):
         description=f"{truth}",
         color=discord.Colour.green())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback Truth used")
 
     async def callback_dare(interaction: discord.Interaction):
         dare = get_dare()
@@ -140,6 +149,7 @@ async def WYR(interaction: discord.Interaction):
         description=f"{dare}",
         color=discord.Colour.red())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback Dare used")
 
     async def callback_wyr(interaction: discord.Interaction):
         wyr = get_wyr()
@@ -148,6 +158,7 @@ async def WYR(interaction: discord.Interaction):
         description=f"{wyr}",
         color=discord.Colour.blue())
         await interaction.response.send_message(embed=Embed, view=view)
+        Log(0, "Callback WYR used")
 
     # Give the buttons a function
     button_truth.callback = callback_truth
@@ -156,6 +167,7 @@ async def WYR(interaction: discord.Interaction):
 
     # Send the original message with the truth question and the button
     await interaction.response.send_message(embed=Embed, view=view)
+    Log(0, "WYR command used")
 
 async def setup(bot):
     bot.tree.add_command(Truth)
