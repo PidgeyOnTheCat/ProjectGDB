@@ -46,7 +46,7 @@
    cd ProjectGDB
 
 2. Get the .env file:
-   ```bash
+   ```.env
    # API Keys and Tokens
    # Replace placeholders with your actual keys and tokens
    TOKEN=your_discord_bot_token
