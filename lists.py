@@ -4,7 +4,7 @@ logTypes = [
     Fore.GREEN + " INFO  " + Fore.RESET,
     Fore.YELLOW + "WARNING" + Fore.RESET,
     Fore.RED + " ERROR " + Fore.RESET,
-    Fore.WHITE + " DEBUG " + Fore.RESET
+    Fore.BLUE + " DEBUG " + Fore.RESET
 ]
 
 threats = [

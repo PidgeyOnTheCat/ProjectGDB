@@ -4,6 +4,8 @@ from discord import app_commands
 
 import aiosqlite, asyncio, random
 
+from typing import Literal
+
 from lists import *
 from Functions import *
 
@@ -256,7 +258,7 @@ class Economy(commands.Cog):
         Log(0, "Levelup command used")
 
     @app_commands.command(name="deposit", description="Deposit a certain amount of money into your bank account.")
-    async def deposit(self, interaction: discord.Interaction, amount: int):
+    async def deposit(self, interaction: discord.Interaction, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
 
@@ -285,9 +287,13 @@ class Economy(commands.Cog):
                 money = 0
                 bank = 0
 
+            try:
+                amount = int(amount)
+            except:
+                amount = money
+
             if money == 0:
                 await ctx.send(f"You can't deposit nothing into your bank account", ephemeral=True)
-
             elif amount > money:
                 await ctx.send(f"{member.mention} has deposited {money} into their bank account.")
 
@@ -313,7 +319,7 @@ class Economy(commands.Cog):
         Log(0, "Deposit command used")
 
     @app_commands.command(name="withdraw", description="Withdraw a certain amount of money from your bank account.")
-    async def withdraw(self, interaction: discord.Interaction, amount: int):
+    async def withdraw(self, interaction: discord.Interaction, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
 
@@ -341,6 +347,11 @@ class Economy(commands.Cog):
                 level = 0
                 money = 0
                 bank = 0
+
+            try:
+                amount = int(amount)
+            except:
+                amount = bank
 
             if bank <= 0:
                 await ctx.send(f"You can't withdraw nothing from your bank account.", ephemeral=True)
@@ -407,10 +418,12 @@ class Economy(commands.Cog):
                     await interaction.response.send_message(f"`{member}` now has **{money}** money and {bank} money in their bank.", ephemeral=True)
 
             await self.bot.db.commit()
-            Log(0, "Give money command used")
+            
 
         else:
-            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+
+        Log(0, "Give money command used")
 
     @app_commands.command(name="takemoney", description="Take a certain amount of money from a user. (admin command)")
     async def takemoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
@@ -465,7 +478,7 @@ class Economy(commands.Cog):
             Log(0, "Take money command used")
 
         else:
-            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
     @app_commands.command(name="stats", description="Show a user's current statistics")
     async def stats(self, interaction: discord.Interaction, member: discord.Member = None):
@@ -510,7 +523,7 @@ class Economy(commands.Cog):
             Log(0, "Stats command used")
 
     @app_commands.command(name="pickpocket", description="Rob a user for their money.")
-    @app_commands.checks.cooldown(1, hours_to_seconds(3), key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, hoursToSeconds(3), key=lambda i: (i.guild_id, i.user.id))
     async def pickpocket(self, interaction: discord.Interaction, member: discord.Member):
         ctx = await self.bot.get_context(interaction)
         robber = ctx.author
@@ -619,10 +632,10 @@ class Economy(commands.Cog):
     @pickpocket.error
     async def on_pickpocket_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(str(error), ephemeral=True)
+            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
 
     @app_commands.command(name="heist", description="Rob a user for their bank money.")
-    @app_commands.checks.cooldown(1, hours_to_seconds(12), key=lambda i: (i.guild_id, i.user.id)) # 24 hour cooldown
+    @app_commands.checks.cooldown(1, hoursToSeconds(12), key=lambda i: (i.guild_id, i.user.id)) # 24 hour cooldown
     async def heist(self, interaction: discord.Interaction, member: discord.Member):
         ctx = await self.bot.get_context(interaction)
         robber = ctx.author
@@ -710,10 +723,10 @@ class Economy(commands.Cog):
     @heist.error
     async def on_heist_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(str(error), ephemeral=True)
+            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
                 
     @app_commands.command(name="work", description="Work to get money.")
-    @app_commands.checks.cooldown(1, hours_to_seconds(8), key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, hoursToSeconds(8), key=lambda i: (i.guild_id, i.user.id))
     async def work(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
@@ -743,10 +756,10 @@ class Economy(commands.Cog):
     @work.error
     async def on_work_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(str(error), ephemeral=True)
+            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
 
     @app_commands.command(name="daily", description="Get your daily money bonus.")
-    @app_commands.checks.cooldown(1, hours_to_seconds(24), key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, hoursToSeconds(24), key=lambda i: (i.guild_id, i.user.id))
     async def daily(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
@@ -776,10 +789,10 @@ class Economy(commands.Cog):
     @daily.error
     async def on_daily_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(str(error), ephemeral=True)
+            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
 
     @app_commands.command(name="sendmoney", description="Give a user a certain amount of money.")
-    async def sendmoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+    async def sendmoney(self, interaction: discord.Interaction, member: discord.Member, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
         ctx = await self.bot.get_context(interaction)
         sender = ctx.author
 
@@ -807,6 +820,10 @@ class Economy(commands.Cog):
                     moneysender = 0
                     moneymember = 0
 
+                try:
+                    amount = int(amount)
+                except:
+                    amount = moneysender
 
                 if amount <= 0:
                     await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
@@ -1065,7 +1082,7 @@ class Economy(commands.Cog):
                     await interaction.response.send_message(f"Column `{column_name}` has been added to the `levels` table.", ephemeral=True)
                     Log(0, f"Column `{column_name}` added to levels table.")
         else:
-            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
     @app_commands.command(name="delcolumn")
     async def delete_column(self, interaction: discord.Interaction, column_name: str):
@@ -1094,7 +1111,7 @@ class Economy(commands.Cog):
                 Log(0, f"Column `{column_name}` removed from levels table.")
 
         else:
-            await interaction.response.send_message("You need the administrator permission to use this command.", ephemeral=True)
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Economy(bot))

@@ -116,5 +116,26 @@ def convert_url(url):
     
     return steamid64
 
-def hours_to_seconds(hours):
+def hoursToSeconds(hours):
     return hours * 60 * 60
+
+def timeConvert(x):
+    # Round Seconds to integer
+    x = int(round(x))
+
+    if x < 0:
+        return "Invalid"
+    elif x < 60:
+        return f"{x} seconds"
+    elif x < 3600:
+        minutes = x // 60
+        seconds = x % 60
+        return f"{minutes} minutes and {seconds} seconds"
+    else:
+        hours = x // 3600
+        minutes = (x % 3600) // 60
+        seconds = x % 60
+        if hours == 1:
+            return f"{hours} hour, {minutes} minutes and {seconds} seconds"
+        else:
+            return f"{hours} hours, {minutes} minutes and {seconds} seconds"

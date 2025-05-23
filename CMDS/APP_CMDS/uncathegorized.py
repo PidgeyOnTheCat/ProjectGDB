@@ -1,5 +1,3 @@
-import random
-
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -8,12 +6,12 @@ from Functions import *
 from lists import *
 from version import botVersion
 
-import aiosqlite, asyncio, random
+import aiosqlite, asyncio, random, os
+
+from typing import Literal
 
 from groq import Groq
-
 from dotenv import load_dotenv
-import os
 
 # Load the environment variables
 load_dotenv()
@@ -78,7 +76,7 @@ class Uncathegorized(commands.Cog):
         Log(0, "Roll command used")
 
     @app_commands.command(name="kys", description="Send a death threat to someone :D")
-    async def KYS(self, interaction: discord.Interaction, user: discord.Member, message: str = ""):
+    async def KYS(self, interaction: discord.Interaction, user: discord.Member, message: str):
         threat = random.choice(threats)
         if message == "":
             await interaction.response.send_message(f'{user.mention}' + threat + '\n:regional_indicator_f::regional_indicator_r::fire:')
@@ -95,15 +93,17 @@ class Uncathegorized(commands.Cog):
         Log(0, "Leak command used")
 
     @app_commands.command(name="test", description="Test command")
-    @commands.has_permissions(administrator=True)
     async def Test(self, interaction: discord.Interaction):
+        if interaction.user.guild_permissions.administrator:
 
-        await interaction.response.send_message("Test")
+            await interaction.response.send_message("Test", ephemeral=True, delete_after=5)
 
-        Log(0, "Test command used")
-        Log(1, "Test command used")
-        Log(2, "Test command used")
-        Log(3, "Test command used")
+            Log(0, "Test command used")
+            Log(1, "Test command used")
+            Log(2, "Test command used")
+            Log(3, "Test command used")
+        else:
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
     @app_commands.command(name="roast", description="Roast someone. ( Why? )")
     async def Roast(self, interaction: discord.Interaction, user: discord.Member, mention: bool=True):
