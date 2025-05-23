@@ -44,3 +44,19 @@
    ```bash
    git clone https://github.com/yourusername/ProjectGDB.git
    cd ProjectGDB
+
+2. Get the .env file:
+   ```bash
+   # API Keys and Tokens
+   # Replace placeholders with your actual keys and tokens
+   TOKEN=your_discord_bot_token
+   STEAM_API_KEY=your_steam_api_key
+   AI_API_KEY=your_openai_api_key
+   
+   # File Paths
+   # Replace with your actual file paths
+   BOTDATA_FILE_PATH="your_botdata_file_path"
+   
+   # Botdata hierarchy
+   # Botdata -> Media -> Audio
+
