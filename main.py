@@ -1,4 +1,4 @@
-import discord, os, asyncio
+import discord, os, asyncio, platform
 from discord.ext import commands
 from dotenv import load_dotenv
 from colorama import Fore as f
@@ -10,10 +10,11 @@ load_dotenv()
 # Load the token from the .env file
 TOKEN = os.getenv("TOKEN")
 
-try:
-    os.system('cls')
-except:
-    os.system('clear')
+# Clear the console
+if platform.system() == "Windows":
+    os.system("cls")
+else:
+    os.system("clear")
 
 bot = commands.Bot(command_prefix=">", intents=discord.Intents.all())
 
