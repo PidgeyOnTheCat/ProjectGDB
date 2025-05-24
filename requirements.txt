@@ -5,3 +5,4 @@ Requests
 python-dotenv
 PyNaCl
 groq
+colorama
