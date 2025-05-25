@@ -242,9 +242,9 @@ class Economy(commands.Cog):
                     #skillpointsamount = int(skillpointsamount)
                     skillpointsamount = 1
                     skillpoints += skillpointsamount
-                    await ctx.send(f"{member.mention} has paid {money_required} and has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!!")
+                    await ctx.send(f"{member.mention} has paid {money_required} <:gdb_emoji_coin:1376156520030404650> and has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!!")
                 else:
-                    await ctx.send(f"{member.mention} has paid {money_required} and has leveled up to level **{level}**!")
+                    await ctx.send(f"{member.mention} has paid {money_required} <:gdb_emoji_coin:1376156520030404650> and has leveled up to level **{level}**!")
 
                 money -= money_required
                 await cursor.execute("UPDATE levels SET level = ? WHERE user = ? AND guild = ?", (level, member.id, ctx.guild.id))
@@ -252,7 +252,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, member.id, ctx.guild.id))
             else:
-                await ctx.send(f"You don't have enough money for a levelup\nYou need {money_required} but you only have {money}", ephemeral=True)
+                await ctx.send(f"You don't have enough <:gdb_emoji_coin:1376156520030404650> for a levelup\nYou need {money_required} <:gdb_emoji_coin:1376156520030404650> but you only have {money} <:gdb_emoji_coin:1376156520030404650>", ephemeral=True)
 
         await self.bot.db.commit()
         Log(0, "Levelup command used")
@@ -295,7 +295,7 @@ class Economy(commands.Cog):
             if money == 0:
                 await ctx.send(f"You can't deposit nothing into your bank account", ephemeral=True)
             elif amount > money:
-                await ctx.send(f"{member.mention} has deposited {money} into their bank account.")
+                await ctx.send(f"{member.mention} has deposited {money} <:gdb_emoji_coin:1376156520030404650> into their bank account.")
 
                 bank += money
                 money -= money
@@ -313,7 +313,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
 
-                await ctx.send(f"{member.mention} has deposited {amount} into their bank account.")
+                await ctx.send(f"{member.mention} has deposited {amount} <:gdb_emoji_coin:1376156520030404650> into their bank account.")
             
         await self.bot.db.commit()
         Log(0, "Deposit command used")
@@ -357,7 +357,7 @@ class Economy(commands.Cog):
                 await ctx.send(f"You can't withdraw nothing from your bank account.", ephemeral=True)
 
             elif amount > bank:
-                await ctx.send(f"{member.mention} has withdrawn {bank} from their bank account.")
+                await ctx.send(f"{member.mention} has withdrawn {bank} <:gdb_emoji_coin:1376156520030404650> from their bank account.")
 
                 money += bank
                 bank -= bank
@@ -369,7 +369,7 @@ class Economy(commands.Cog):
                 await ctx.send(f"You can't withdraw nothing from your bank account.", ephemeral=True)
 
             else:
-                await ctx.send(f"{member.mention} has withdrawn {amount} from their bank account.")
+                await ctx.send(f"{member.mention} has withdrawn {amount} <:gdb_emoji_coin:1376156520030404650> from their bank account.")
 
                 money += amount
                 bank -= amount
@@ -418,6 +418,7 @@ class Economy(commands.Cog):
                     await interaction.response.send_message(f"`{member}` now has **{money}** money and {bank} money in their bank.", ephemeral=True)
 
             await self.bot.db.commit()
+            Log(0, "Give money command used")
             
 
         else:
@@ -518,7 +519,7 @@ class Economy(commands.Cog):
             xp_required = (level + 1) * 100
             xp_left = xp_required - xp 
 
-            em = discord.Embed(title=f"{member.name}'s Level", color=discord.Color.blurple(), description=f"Level : `{level}`\nXP: `{xp}`\nXP left : `{xp_left}`\nMoney in pocket : `{money}`\nMoney in bank : `{bank}`\nUnused Skillpoints : `{skillpoints}`")
+            em = discord.Embed(title=f"{member.name}'s Level", color=discord.Color.blurple(), description=f"Level : `{level}`\nXP: `{xp}`\nXP left : `{xp_left}`\n<:gdb_emoji_coin:1376156520030404650> in pocket : `{money}` <:gdb_emoji_coin:1376156520030404650>\n<:gdb_emoji_coin:1376156520030404650> in bank : `{bank}` <:gdb_emoji_coin:1376156520030404650>\nUnused Skillpoints : `{skillpoints}`")
             await ctx.send(embed=em)
             Log(0, "Stats command used")
 
@@ -590,7 +591,7 @@ class Economy(commands.Cog):
                             moneymember -= robtake
                             moneyrobber += robtake
 
-                            await interaction.response.send_message(f"{robber.mention} stole all money from {member.mention}!")
+                            await interaction.response.send_message(f"{robber.mention} stole all <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
                         else:
                             robtake = moneymember * random.uniform(0.40, 0.75)
                             robtake = int(round(robtake, 0))
@@ -598,7 +599,7 @@ class Economy(commands.Cog):
                             moneymember -= robtake
                             moneyrobber += robtake
 
-                            await interaction.response.send_message(f"{robber.mention} stole {robtake} from {member.mention}!")
+                            await interaction.response.send_message(f"{robber.mention} stole {robtake} <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
 
                     else:
                         fine = moneymember * random.uniform(0.5, 0.75)
@@ -618,9 +619,9 @@ class Economy(commands.Cog):
                             moneyrobber -= fine
                             bankmember += fine
 
-                        await interaction.response.send_message(f"{robber.mention} just got caught trying to pickpocket {member.mention} and got fined for {fine} money.")
+                        await interaction.response.send_message(f"{robber.mention} just got caught trying to pickpocket {member.mention} and got fined for {fine} <:gdb_emoji_coin:1376156520030404650>.")
                 else:
-                    await interaction.response.send_message("This user doesn't have enough money in their pocket. \n(500 money required)", ephemeral=True)
+                    await interaction.response.send_message("This user doesn't have enough money in their pocket. \n(500 <:gdb_emoji_coin:1376156520030404650> required)", ephemeral=True)
 
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneyrobber, robber.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankrobber, robber.id, ctx.guild.id))
@@ -693,7 +694,7 @@ class Economy(commands.Cog):
                         bankrobber += take
                         bankmember -= take
 
-                        await interaction.response.send_message(f"{robber.mention} stole {take} from {member.mention}!")
+                        await interaction.response.send_message(f"{robber.mention} stole {take} <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
 
                     else: # failed heist
                         fine = bankmember * random.uniform(0.75, 0.90)
@@ -708,10 +709,10 @@ class Economy(commands.Cog):
                             bankrobber -= fine
                             bankmember += fine
 
-                        await interaction.response.send_message(f"{robber.mention} just got caught trying to rob {member.mention} and got fined for {fine} money.")
+                        await interaction.response.send_message(f"{robber.mention} just got caught trying to rob {member.mention} and got fined for {fine} <:gdb_emoji_coin:1376156520030404650>.")
 
                 else:
-                    await interaction.response.send_message("This user doesn't have enough money in their bank. \n(1000 money required)", ephemeral=True)
+                    await interaction.response.send_message("This user doesn't have enough money in their bank. \n(1000 <:gdb_emoji_coin:1376156520030404650> required)", ephemeral=True)
 
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneyrobber, robber.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankrobber, robber.id, ctx.guild.id))
@@ -747,7 +748,7 @@ class Economy(commands.Cog):
             paycheck = random.randint(300, 900)
             money += paycheck
 
-            await interaction.response.send_message(f"{member.mention} went to work and has gained {paycheck} money.")
+            await interaction.response.send_message(f"{member.mention} went to work and has gained {paycheck} <:gdb_emoji_coin:1376156520030404650>.")
 
             await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
         await self.bot.db.commit()
@@ -780,7 +781,7 @@ class Economy(commands.Cog):
             dailyreward = round(random.randint(1500, 2500), -2)
             money += dailyreward
 
-            await interaction.response.send_message(f"{member.mention} has gained {dailyreward} money from their daily reward.")
+            await interaction.response.send_message(f"{member.mention} has gained {dailyreward} <:gdb_emoji_coin:1376156520030404650> from their daily reward.")
 
             await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
         await self.bot.db.commit()
@@ -829,12 +830,12 @@ class Economy(commands.Cog):
                     await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
                 else:
                     if moneysender < amount:
-                        await interaction.response.send_message(f"You can't send {amount} money because you don't have enough.", ephemeral=True)
+                        await interaction.response.send_message(f"You can't send {amount} <:gdb_emoji_coin:1376156520030404650> because you don't have enough.", ephemeral=True)
                     else:
                         moneysender -= amount
                         moneymember += amount
 
-                        await interaction.response.send_message(f"{sender.mention} gave {amount} to {member.mention}.")
+                        await interaction.response.send_message(f"{sender.mention} sent {amount} <:gdb_emoji_coin:1376156520030404650> to {member.mention}.")
 
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneysender, sender.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
@@ -860,15 +861,15 @@ class Economy(commands.Cog):
                 money = 0
 
             if amount > money:
-                await interaction.response.send_message(f"You can't bet {amount} money because you dont have enough.", ephemeral=True)
+                await interaction.response.send_message(f"You can't bet {amount} <:gdb_emoji_coin:1376156520030404650> because you dont have enough.", ephemeral=True)
             else:
                 rng = random.randint(1, 3)
                 if bet == rng:
                     money += amount
-                    await interaction.response.send_message(f"{member.mention} bet {amount} money on {bet} and won.")
+                    await interaction.response.send_message(f"{member.mention} bet {amount} <:gdb_emoji_coin:1376156520030404650> on {bet} and won.")
                 else:
                     money -= amount
-                    await interaction.response.send_message(f"{member.mention} bet {amount} money on {bet} and lost. The number was {rng}")
+                    await interaction.response.send_message(f"{member.mention} bet {amount} <:gdb_emoji_coin:1376156520030404650> on {bet} and lost. The number was {rng}")
 
             await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
         await self.bot.db.commit()

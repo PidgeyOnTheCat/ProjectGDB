@@ -52,7 +52,7 @@ class Uncathegorized(commands.Cog):
 
     @app_commands.command(name="hello", description="Says hi and mentions the user.")
     async def Hello(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f'Hi {interaction.user.mention}! <:GDBemoji:1264147234983776297>', ephemeral=True)
+        await interaction.response.send_message(f'Hi {interaction.user.mention}! <:gdb_emoji_logo:1264147234983776297>', ephemeral=True)
         Log(0, "Hello command used")
 
     @app_commands.command(name="ping", description="Responds with Pong.")
