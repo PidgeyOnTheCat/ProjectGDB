@@ -6,3 +6,4 @@ python-dotenv
 PyNaCl
 groq
 colorama
+easy_pil

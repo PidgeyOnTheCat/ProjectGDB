@@ -2,15 +2,15 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 
-import aiosqlite, asyncio, random
+import aiosqlite, asyncio, random, os
 
 from typing import Literal
+from dotenv import load_dotenv
+from easy_pil import *
+from PIL import Image
 
 from lists import *
 from Functions import *
-
-from dotenv import load_dotenv
-import os
 
 # Load the environment variables
 load_dotenv()
@@ -481,8 +481,8 @@ class Economy(commands.Cog):
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
-    @app_commands.command(name="stats", description="Show a user's current statistics")
-    async def stats(self, interaction: discord.Interaction, member: discord.Member = None):
+    @app_commands.command(name="oldstats", description="Show a user's current statistics (OLD MENU)")
+    async def oldstats(self, interaction: discord.Interaction, member: discord.Member = None):
         ctx = await self.bot.get_context(interaction)
         if member is None:
             member = ctx.author
@@ -521,7 +521,102 @@ class Economy(commands.Cog):
 
             em = discord.Embed(title=f"{member.name}'s Level", color=discord.Color.blurple(), description=f"Level : `{level}`\nXP: `{xp}`\nXP left : `{xp_left}`\n<:gdb_emoji_coin:1376156520030404650> in pocket : `{money}` <:gdb_emoji_coin:1376156520030404650>\n<:gdb_emoji_coin:1376156520030404650> in bank : `{bank}` <:gdb_emoji_coin:1376156520030404650>\nUnused Skillpoints : `{skillpoints}`")
             await ctx.send(embed=em)
+            Log(0, "Old Stats command used")
+
+    @app_commands.command(name="stats", description="Show a user's current statistics")
+    async def stats(self, interaction: discord.Interaction, member: discord.Member = None):
+        ctx = await self.bot.get_context(interaction)
+        if member is None:
+            member = ctx.author
+        async with self.bot.db.cursor() as cursor:
+            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
+            xp = await cursor.fetchone()
+            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
+            level = await cursor.fetchone()
+            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
+            money = await cursor.fetchone()
+            await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
+            bank = await cursor.fetchone()
+            await cursor.execute("SELECT skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
+            skillpoints = await cursor.fetchone()
+
+            if not xp or not level:
+                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
+                await self.bot.commit()
+
+            try:
+                xp = xp[0]
+                level = level[0]
+                money = money[0]
+                bank = bank[0]
+                skillpoints = skillpoints[0]
+            except TypeError:
+                xp = 0
+                level = 0
+                money = 0
+                bank = 0
+                skillpoints = 0
+
+            # Calculate xp needed for level up
+            xp_required = (level + 1) * 100
+            xp_left = xp_required - xp 
+
+            user_data = {
+                "name": f"{member.name}",
+                "level": level,
+                "xp": xp,
+                "xp_left": xp_left,
+                "money": money,
+                "bank": bank,
+                "skillpoints": skillpoints
+            }
+
+            background = Editor(Canvas((900, 330), color="#141414"))
+            profile_picture = await load_image_async(str(member.avatar.url))
+            profile = Editor(profile_picture).resize((150, 150)).circle_image()
+            font1 = Font.poppins(size=40)
+            font2 = Font.poppins(size=30)
+            coin_icon = Image.open(rf"{BOTDATA_FILE_PATH}\Media\Images\gdb_emoji_coin_downscaled.png").resize((96, 96))
+
+            card_right_shape = [(650, 0), (800, 330), (900, 330), (900, 0)]
+
+            background.polygon(card_right_shape, color="#CFCFCF")
+            background.paste(profile, (30, 30))
+
+            background.rectangle((30, 260), width=650, height=40, color="#FFFFFF", radius=15)
+            background.bar((30, 260), max_width=650, height=41, percentage=user_data["xp"] / (user_data["xp"] + user_data["xp_left"]) * 100, color="#9323CB", radius=15)
+            background.text((200, 40), user_data["name"], font=font1, color="#FFFFFF")
+
+            background.rectangle((200, 100), width=350, height=2, fill="#4A4A4A")
+            background.text(
+                (200, 130),
+                f"Level: {user_data['level']} | XP: {user_data['xp']} / {user_data['xp_left'] + user_data['xp']}",
+                font=font2,
+                color="#FFFFFF"
+            )
+            background.text(
+                (200, 170),
+                f"Money: {user_data['money']} | Bank: {user_data['bank']}",
+                font=font2,
+                color="#FFFFFF"
+            )
+            background.text(
+                (200, 210),
+                f"Skillpoints: {user_data['skillpoints']}",
+                font=font2,
+                color="#FFFFFF"
+            )
+
+            background.paste(coin_icon, (900-96-20, 20))
+
+            file = discord.File(fp=background.image_bytes, filename="stats_card.png")
+            await interaction.response.send_message(file=file)
+
             Log(0, "Stats command used")
+
+    @stats.error
+    async def stats_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
 
     @app_commands.command(name="pickpocket", description="Rob a user for their money.")
     @app_commands.checks.cooldown(1, hoursToSeconds(3), key=lambda i: (i.guild_id, i.user.id))
