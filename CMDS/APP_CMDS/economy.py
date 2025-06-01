@@ -583,11 +583,11 @@ class Economy(commands.Cog):
             background.polygon(card_right_shape, color="#CFCFCF")
             background.paste(profile, (30, 30))
 
-            background.rectangle((30, 260), width=650, height=40, color="#FFFFFF", radius=15)
-            background.bar((30, 260), max_width=650, height=41, percentage=user_data["xp"] / (user_data["xp"] + user_data["xp_left"]) * 100, color="#9323CB", radius=15)
+            background.rectangle((30, 260), width=650, height=40, color="#FFFFFF", radius=22)
+            background.bar((30, 260), max_width=650, height=41, percentage=user_data["xp"] / (user_data["xp"] + user_data["xp_left"]) * 100, color="#9323CB", radius=22)
             background.text((200, 40), user_data["name"], font=font1, color="#FFFFFF")
 
-            background.rectangle((200, 100), width=350, height=2, fill="#4A4A4A")
+            background.rectangle((200, 100), width=350, height=2, fill="#7D1DAD")
             background.text(
                 (200, 130),
                 f"Level: {user_data['level']} | XP: {user_data['xp']} / {user_data['xp_left'] + user_data['xp']}",
