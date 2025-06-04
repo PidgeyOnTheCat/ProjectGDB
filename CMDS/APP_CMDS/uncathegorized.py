@@ -188,7 +188,7 @@ class Uncathegorized(commands.Cog):
                 messages=[
                     {
                         "role": "system",
-                        "content": "Your name is GDB. You are a discord bot. You are very funny and you like to joke around. You love dark humor. You are also very helpful and you like to help people. You write short answers."
+                        "content": "Your name is GDB. You are a discord bot. You are very funny and you like to joke around. You love dark humor. You are also very helpful and you like to help people. You write short answers. You are also very horny."
                     },
                     {
                         "role": "user",
