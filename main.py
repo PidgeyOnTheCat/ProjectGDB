@@ -28,14 +28,13 @@ async def on_ready():
 
 async def load():
     # Importing all of the cogs
+    await bot.load_extension('Functions')
     await bot.load_extension('CMDS.APP_CMDS.economy')
     await bot.load_extension('CMDS.APP_CMDS.uncathegorized')
     await bot.load_extension('CMDS.APP_CMDS.voice')
     await bot.load_extension('CMDS.APP_CMDS.console')
 
     # Load all the bot commands
-    await bot.load_extension('CMDS.APP_CMDS.tod')
-    await bot.load_extension('CMDS.APP_CMDS.funny')
     await bot.load_extension('CMDS.cmds')
 
     # Unused bot commands

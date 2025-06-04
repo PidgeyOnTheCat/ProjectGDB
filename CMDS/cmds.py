@@ -10,7 +10,7 @@ async def test(ctx):
 @commands.command()
 async def truth(ctx):
     # Put the API output in input variable
-    input = get_truth()
+    input = Functions.get_truth()
 
     # Embed that holds all the information
     embed = discord.Embed(title="Truth", description=input, color=discord.Colour.blurple())
@@ -21,7 +21,7 @@ async def truth(ctx):
 @commands.command()
 async def dare(ctx):
     # Put the API output in input variable
-    input = get_dare()
+    input = Functions.get_dare()
 
     # Embed that holds all the information
     embed = discord.Embed(title="Dare", description=input, color=discord.Colour.blurple())
@@ -32,7 +32,7 @@ async def dare(ctx):
 @commands.command()
 async def wyr(ctx):
     # Put the API output in input variable
-    input = get_wyr()
+    input = Functions.get_wyr()
 
     # Embed that holds all the information
     embed = discord.Embed(title="Would You Rather", description=input, color=discord.Colour.blurple())

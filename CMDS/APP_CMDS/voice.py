@@ -47,17 +47,17 @@ class Voice(commands.Cog):
                 
             await interaction.response.send_message(f"Joined {voice_channel.name}", ephemeral=True)
 
-            Log(0, f"Joined {voice_channel.name}")
+            Functions.Log(0, f"Joined {voice_channel.name}")
             
         except asyncio.TimeoutError:
             await interaction.response.send_message("Connection timed out. Please try again.", ephemeral=True)
-            Log(1, "Connection timed out.")
+            Functions.Log(1, "Connection timed out.")
         except discord.ClientException as e:
             await interaction.response.send_message(f"Failed to join voice channel: {str(e)}", ephemeral=True)
-            Log(2, f"Failed to join voice channel: {str(e)}")
+            Functions.Log(2, f"Failed to join voice channel: {str(e)}")
         except Exception as e:
             await interaction.response.send_message(f"An unexpected error occurred: {str(e)}", ephemeral=True)
-            Log(2, f"An unexpected error occurred: {str(e)}")
+            Functions.Log(2, f"An unexpected error occurred: {str(e)}")
 
     @app_commands.command(name="disconnect", description="Leaves the voice call.")
     async def disconnect(self, interaction: discord.Interaction):
@@ -76,7 +76,7 @@ class Voice(commands.Cog):
         # Send a response to indicate the bot has left
         await interaction.response.send_message("Left the voice channel.", ephemeral=True)
 
-        Log(0, "Left the voice channel.")
+        Functions.Log(0, "Left the voice channel.")
 
     @app_commands.command(name="soundboard", description="Play a soundboard sound")
     @app_commands.describe(sound="The sound to play")
@@ -107,10 +107,10 @@ class Voice(commands.Cog):
             voice_client.stop()
             voice_client.play(discord.FFmpegOpusAudio(audio_path), after=lambda e: print(f"Error: {e}") if e else None)
             await interaction.response.send_message(f"Playing `{sound}`.", ephemeral=True)
-            Log(0, f"Playing {sound}.")
+            Functions.Log(0, f"Playing {sound}.")
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
-            Log(2, f"An error occurred: {str(e)}")
+            Functions.Log(2, f"An error occurred: {str(e)}")
 
     @soundboard.autocomplete("sound")
     async def soundboard_autocomplete(

@@ -21,8 +21,9 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        # stats the voice call xp giver
-        self.update_xp.start()
+        # starts the voice call xp giver
+        self.f = Functions(bot)
+        self.f.update_xp.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -98,7 +99,7 @@ class Economy(commands.Cog):
             await cursor.execute("UPDATE levels SET xp = ? WHERE user = ? AND guild = ?", (xp, author.id, guild.id))
             await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, author.id, guild.id))
 
-            Log(0, f"XP and money given to {author.name}")
+            Functions.Log(0, f"XP and money given to {author.name}")
             
             # Calculate xp needed for level up
             xp_required = (level + 1) * 100
@@ -119,14 +120,14 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET xp = ? WHERE user = ? AND guild = ?", (0, author.id, guild.id))
                 await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, author.id, guild.id))
 
-                Log(0, f"{author.name} has leveled up to level {level}.")
+                Functions.Log(0, f"{author.name} has leveled up to level {level}.")
 
             for word in nword_list:
                 if word in message.content.lower():
                     nword += 1
                     await cursor.execute("UPDATE levels SET nword = ? WHERE user = ? AND guild = ?", (nword, author.id, guild.id))
                     await message.channel.send(f":thumbsdown:  \nNo racism!")
-                    Log(0, f"{author.name} has said the N-word.")
+                    Functions.Log(0, f"{author.name} has said the N-word.")
 
             if random.randint(1, 1000000) == 1: # 1, 1000000 / 1, 5
                 level += 5
@@ -134,61 +135,14 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET xp = ? WHERE user = ? AND guild = ?", (0, author.id, guild.id))
 
                 await message.channel.send(f"{author.mention} has discovered a one in a million easter egg and gained 5 extra levels!")
-                Log(0, f"{author.name} has discovered a one in a million easter egg and gained 5 extra levels!")
+                Functions.Log(0, f"{author.name} has discovered a one in a million easter egg and gained 5 extra levels!")
 
             await self.bot.db.commit()
             await self.bot.process_commands(message)
 
-    # Make users in voice calls get xp every minute
-    @tasks.loop(minutes=1.0)
-    async def update_xp(self):
-        for guild in self.bot.guilds:
-            for voice_channel in guild.voice_channels:
-                for member in voice_channel.members:
-                    if not member.bot:
-                        await self.give_xp(member, guild)
-                        Log(0, f"XP given to {member.name}")
-        
-    async def give_xp(self, member, guild):
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, guild.id))
-            result = await cursor.fetchone()
-            
-            if not result:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.db.commit()
-                xp = 0
-                level = 0
-                money = 0
-                bank = 0
-                nword = 0
-                skillpoints = 0
-            else:
-                xp, level, money, bank, nword, skillpoints = result
-
-            xp += random.randint(25, 40) # 25, 40 / 100, 10000   per minute
-            money += random.randint(30, 55) # 30, 55 / 1000, 10000   per minute
-
-            await cursor.execute("UPDATE levels SET xp = ?, money = ? WHERE user = ? AND guild = ?", (xp, money, member.id, guild.id))
-
-            xp_required = (level + 1) * 100
-
-            if xp >= xp_required:
-                level += 1
-                skillpointsamount = 1 if level % 5 == 0 else 0
-                skillpoints += skillpointsamount
-                xp = 0  # Reset XP after level up
-
-                await cursor.execute("UPDATE levels SET level = ?, xp = ?, skillpoints = ? WHERE user = ? AND guild = ?", (level, xp, skillpoints, member.id, guild.id))
-                
-                if skillpointsamount > 0:
-                    #await member.send(f"Congratulations! You've leveled up to level {level} and gained {skillpointsamount} skill point(s)!")
-                    pass
-                else:
-                    #await member.send(f"Congratulations! You've leveled up to level {level}!")
-                    pass
-
-            await self.bot.db.commit()
+    @commands.Cog.listener()
+    async def on_app_command_completion(self, interaction: discord.Interaction, command: app_commands.Command):
+        await self.f.give_xp(interaction.user, interaction.guild)
 
     # Define all of the app commands
     @app_commands.command(name="levelup", description="Level up by paying money.")
@@ -255,7 +209,7 @@ class Economy(commands.Cog):
                 await ctx.send(f"You don't have enough <:gdb_emoji_coin:1376156520030404650> for a levelup\nYou need {money_required} <:gdb_emoji_coin:1376156520030404650> but you only have {money} <:gdb_emoji_coin:1376156520030404650>", ephemeral=True)
 
         await self.bot.db.commit()
-        Log(0, "Levelup command used")
+        Functions.Log(0, "Levelup command used")
 
     @app_commands.command(name="deposit", description="Deposit a certain amount of money into your bank account.")
     async def deposit(self, interaction: discord.Interaction, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
@@ -316,7 +270,7 @@ class Economy(commands.Cog):
                 await ctx.send(f"{member.mention} has deposited {amount} <:gdb_emoji_coin:1376156520030404650> into their bank account.")
             
         await self.bot.db.commit()
-        Log(0, "Deposit command used")
+        Functions.Log(0, "Deposit command used")
 
     @app_commands.command(name="withdraw", description="Withdraw a certain amount of money from your bank account.")
     async def withdraw(self, interaction: discord.Interaction, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
@@ -378,7 +332,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
 
         await self.bot.db.commit()
-        Log(0, "Withdraw command used")
+        Functions.Log(0, "Withdraw command used")
 
     @app_commands.command(name="givemoney", description="Give a user a certain amount of money. (admin command)")
     async def givemoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
@@ -418,13 +372,13 @@ class Economy(commands.Cog):
                     await interaction.response.send_message(f"`{member}` now has **{money}** money and {bank} money in their bank.", ephemeral=True)
 
             await self.bot.db.commit()
-            Log(0, "Give money command used")
+            Functions.Log(0, "Give money command used")
             
 
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
-        Log(0, "Give money command used")
+        Functions.Log(0, "Give money command used")
 
     @app_commands.command(name="takemoney", description="Take a certain amount of money from a user. (admin command)")
     async def takemoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
@@ -476,7 +430,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
 
             await self.bot.db.commit()
-            Log(0, "Take money command used")
+            Functions.Log(0, "Take money command used")
 
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
@@ -521,7 +475,7 @@ class Economy(commands.Cog):
 
             em = discord.Embed(title=f"{member.name}'s Level", color=discord.Color.blurple(), description=f"Level : `{level}`\nXP: `{xp}`\nXP left : `{xp_left}`\n<:gdb_emoji_coin:1376156520030404650> in pocket : `{money}` <:gdb_emoji_coin:1376156520030404650>\n<:gdb_emoji_coin:1376156520030404650> in bank : `{bank}` <:gdb_emoji_coin:1376156520030404650>\nUnused Skillpoints : `{skillpoints}`")
             await ctx.send(embed=em)
-            Log(0, "Old Stats command used")
+            Functions.Log(0, "Old Stats command used")
 
     @app_commands.command(name="stats", description="Show a user's current statistics")
     async def stats(self, interaction: discord.Interaction, member: discord.Member = None):
@@ -612,14 +566,14 @@ class Economy(commands.Cog):
             file = discord.File(fp=background.image_bytes, filename="stats_card.png")
             await interaction.response.send_message(file=file)
 
-            Log(0, "Stats command used")
+            Functions.Log(0, "Stats command used")
 
     @stats.error
     async def stats_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
 
     @app_commands.command(name="pickpocket", description="Rob a user for their money.")
-    @app_commands.checks.cooldown(1, hoursToSeconds(3), key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, Functions.hoursToSeconds(3), key=lambda i: (i.guild_id, i.user.id))
     async def pickpocket(self, interaction: discord.Interaction, member: discord.Member):
         ctx = await self.bot.get_context(interaction)
         robber = ctx.author
@@ -723,15 +677,15 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankmember, member.id, ctx.guild.id))
             await self.bot.db.commit()
-            Log(0, "Pickpocket command used")
+            Functions.Log(0, "Pickpocket command used")
     
     @pickpocket.error
     async def on_pickpocket_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
+            await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
 
     @app_commands.command(name="heist", description="Rob a user for their bank money.")
-    @app_commands.checks.cooldown(1, hoursToSeconds(12), key=lambda i: (i.guild_id, i.user.id)) # 24 hour cooldown
+    @app_commands.checks.cooldown(1, Functions.hoursToSeconds(12), key=lambda i: (i.guild_id, i.user.id)) # 24 hour cooldown
     async def heist(self, interaction: discord.Interaction, member: discord.Member):
         ctx = await self.bot.get_context(interaction)
         robber = ctx.author
@@ -814,15 +768,15 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankmember, member.id, ctx.guild.id))
             await self.bot.db.commit()
-            Log(0, "Heist command used")
+            Functions.Log(0, "Heist command used")
 
     @heist.error
     async def on_heist_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
+            await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
                 
     @app_commands.command(name="work", description="Work to get money.")
-    @app_commands.checks.cooldown(1, hoursToSeconds(8), key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, Functions.hoursToSeconds(8), key=lambda i: (i.guild_id, i.user.id))
     async def work(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
@@ -847,15 +801,15 @@ class Economy(commands.Cog):
 
             await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
         await self.bot.db.commit()
-        Log(0, "Work command used")
+        Functions.Log(0, "Work command used")
 
     @work.error
     async def on_work_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
+            await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
 
     @app_commands.command(name="daily", description="Get your daily money bonus.")
-    @app_commands.checks.cooldown(1, hoursToSeconds(24), key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, Functions.hoursToSeconds(24), key=lambda i: (i.guild_id, i.user.id))
     async def daily(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
@@ -880,12 +834,12 @@ class Economy(commands.Cog):
 
             await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
         await self.bot.db.commit()
-        Log(0, "Daily command used")
+        Functions.Log(0, "Daily command used")
 
     @daily.error
     async def on_daily_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(f"Please wait {timeConvert(error.retry_after)}", ephemeral=True)
+            await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
 
     @app_commands.command(name="sendmoney", description="Give a user a certain amount of money.")
     async def sendmoney(self, interaction: discord.Interaction, member: discord.Member, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
@@ -935,7 +889,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneysender, sender.id, ctx.guild.id))
                 await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
         await self.bot.db.commit()
-        Log(0, "Send money command used")
+        Functions.Log(0, "Send money command used")
     
     @app_commands.command(name="bet", description="Bet on a number ranging from 1 to 3.")
     async def bet(self, interaction: discord.Interaction, amount: int, bet: int):
@@ -968,7 +922,7 @@ class Economy(commands.Cog):
 
             await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
         await self.bot.db.commit()
-        Log(0, "Bet command used")
+        Functions.Log(0, "Bet command used")
 
     @app_commands.command(name="skills", description="Shows your skilltree.")
     async def skills(self, interaction: discord.Interaction):
@@ -1159,7 +1113,7 @@ class Economy(commands.Cog):
             button_back.callback = callback_back
 
         await interaction.response.send_message(embed=embedMain, view=viewMain, ephemeral=True)
-        Log(0, "Skills command used")
+        Functions.Log(0, "Skills command used")
 
     @app_commands.command(name="addcolumn")
     async def add_column(self, interaction: discord.Interaction, column_name: str):
@@ -1176,7 +1130,7 @@ class Economy(commands.Cog):
                     await cursor.execute(f"ALTER TABLE levels ADD COLUMN {column_name} INTEGER DEFAULT 0")
                     await self.bot.db.commit()
                     await interaction.response.send_message(f"Column `{column_name}` has been added to the `levels` table.", ephemeral=True)
-                    Log(0, f"Column `{column_name}` added to levels table.")
+                    Functions.Log(0, f"Column `{column_name}` added to levels table.")
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
@@ -1204,10 +1158,12 @@ class Economy(commands.Cog):
                 await self.bot.db.commit()
 
                 await interaction.response.send_message(f"Column `{column_name}` has been deleted from the `levels` table.", ephemeral=True)
-                Log(0, f"Column `{column_name}` removed from levels table.")
+                Functions.Log(0, f"Column `{column_name}` removed from levels table.")
+                await self.f.give_xp(interaction.user,  interaction.guild)
 
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        
 
 async def setup(bot):
     await bot.add_cog(Economy(bot))
