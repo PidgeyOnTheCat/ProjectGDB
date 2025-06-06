@@ -184,9 +184,11 @@ class Functions(commands.Cog):
             for voice_channel in guild.voice_channels:
                 for member in voice_channel.members:
                     if not member.bot:
-                        await self.give_xp(member, guild)
+                        await self.give_xp(member, guild, 2)
 
-    async def give_xp(self, member, guild):
+    async def give_xp(self, member, guild, variant):
+        alerts_channel = self.bot.get_channel(1380623487927845064)
+
         async with self.bot.db.cursor() as cursor:
             await cursor.execute("SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, guild.id))
             result = await cursor.fetchone()
@@ -203,27 +205,36 @@ class Functions(commands.Cog):
             else:
                 xp, level, money, bank, nword, skillpoints = result
 
-            xp += random.randint(25, 40) # 25, 40 / 100, 10000   per give
-            money += random.randint(30, 55) # 30, 55 / 1000, 10000   per give
+            if variant == 0: # normal message
+                xp += random.randint(15, 35) # 15, 40 / 100, 10000   per give
+                money += random.randint(20, 50) # 20, 55 / 1000, 10000   per give
+            elif variant == 1: # slash command
+                xp += random.randint(25, 40) # 25, 40 / 100, 10000   per give
+                money += random.randint(30, 55) # 30, 55 / 1000, 10000   per give
+            elif variant == 2: # vc
+                xp += random.randint(25, 50) # 25, 40 / 100, 10000   per give
+                money += random.randint(30, 65) # 30, 55 / 1000, 10000   per give
 
             await cursor.execute("UPDATE levels SET xp = ?, money = ? WHERE user = ? AND guild = ?", (xp, money, member.id, guild.id))
 
+            # Calculate xp needed for level up
             xp_required = (level + 1) * 100
 
             if xp >= xp_required:
                 level += 1
-                skillpointsamount = 1 if level % 5 == 0 else 0
-                skillpoints += skillpointsamount
-                xp = 0  # Reset XP after level up
+                xp = 0 # Reset XP after level up
+
+                if level % 5 == 0:
+                    skillpointsamount = level / 5
+                    skillpointsamount = int(skillpointsamount)
+                    skillpoints += skillpointsamount
+                    await alerts_channel.send(f"{member.mention} has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!")
+                    Functions.Log(0, f"{member.name} leveled up to {level} got {skillpointsamount}")
+                else:
+                    await alerts_channel.send(f"{member.mention} has leveled up to level **{level}**!")
+                    Functions.Log(0, f"{member.name} leveled up to {level}")
 
                 await cursor.execute("UPDATE levels SET level = ?, xp = ?, skillpoints = ? WHERE user = ? AND guild = ?", (level, xp, skillpoints, member.id, guild.id))
-                
-                if skillpointsamount > 0:
-                    #await member.send(f"Congratulations! You've leveled up to level {level} and gained {skillpointsamount} skill point(s)!")
-                    pass
-                else:
-                    #await member.send(f"Congratulations! You've leveled up to level {level}!")
-                    pass
 
             await self.bot.db.commit()
             Functions.Log(0, f"XP and money given to {member.name}")

@@ -25,9 +25,16 @@ class Economy(commands.Cog):
         self.f = Functions(bot)
         self.f.update_xp.start()
 
+    async def cog_unload(self):
+        self.f.update_xp.cancel()
+        return await super().cog_unload()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("economy.py has loaded succesfully")
+
+        await self.f.update_xp.start()
+        print("task looping succesfully")
         
         # level database stuff
         setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
@@ -53,12 +60,15 @@ class Economy(commands.Cog):
             )
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
         author = message.author
         guild = message.guild
 
+        # Give User xp and money
+        await self.f.give_xp(author, guild, 0)
+        
         # Initialize DB
         async with self.bot.db.cursor() as cursor:
             await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (author.id, guild.id))
@@ -93,35 +103,6 @@ class Economy(commands.Cog):
                 nword = 0
                 skillpoints = 0
 
-            # Gives the user xp and money
-            xp += random.randint(15, 40) # 15, 40 / 100, 10000
-            money += random.randint(20, 55) # 20, 55 / 1000, 10000
-            await cursor.execute("UPDATE levels SET xp = ? WHERE user = ? AND guild = ?", (xp, author.id, guild.id))
-            await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, author.id, guild.id))
-
-            Functions.Log(0, f"XP and money given to {author.name}")
-            
-            # Calculate xp needed for level up
-            xp_required = (level + 1) * 100
-
-            if xp >= xp_required:
-                level += 1
-
-                if level % 5 == 0:
-                    #skillpointsamount = level / 5
-                    #skillpointsamount = int(skillpointsamount)
-                    skillpointsamount = 1
-                    skillpoints += skillpointsamount
-                    await message.channel.send(f"{author.mention} has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!")
-                else:
-                    await message.channel.send(f"{author.mention} has leveled up to level **{level}**!")
-
-                await cursor.execute("UPDATE levels SET level = ? WHERE user = ? AND guild = ?", (level, author.id, guild.id))
-                await cursor.execute("UPDATE levels SET xp = ? WHERE user = ? AND guild = ?", (0, author.id, guild.id))
-                await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, author.id, guild.id))
-
-                Functions.Log(0, f"{author.name} has leveled up to level {level}.")
-
             for word in nword_list:
                 if word in message.content.lower():
                     nword += 1
@@ -142,7 +123,7 @@ class Economy(commands.Cog):
 
     @commands.Cog.listener()
     async def on_app_command_completion(self, interaction: discord.Interaction, command: app_commands.Command):
-        await self.f.give_xp(interaction.user, interaction.guild)
+        await self.f.give_xp(interaction.user, interaction.guild, 1)
 
     # Define all of the app commands
     @app_commands.command(name="levelup", description="Level up by paying money.")
