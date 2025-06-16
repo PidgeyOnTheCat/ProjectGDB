@@ -187,7 +187,7 @@ class Functions(commands.Cog):
                         await self.give_xp(member, guild, 2)
 
     async def give_xp(self, member, guild, variant):
-        alerts_channel = self.bot.get_channel(1380623487927845064)
+        alerts_channel = self.bot.get_channel(1384275554718711858)
 
         async with self.bot.db.cursor() as cursor:
             await cursor.execute("SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, guild.id))
