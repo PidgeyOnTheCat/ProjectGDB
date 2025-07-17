@@ -26,5 +26,15 @@ class Console(commands.Cog):
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
+    @app_commands.command(name="shutdown", description="Shuts down the bot. (admin command)")
+    async def shutdown(self, interaction: discord.Interaction):
+        if interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("Shutting down the bot...", ephemeral=True)
+            Functions.Log(0, "Bot is shutting down")
+            await self.bot.close()
+            os._exit(0)
+        else:
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+
 async def setup(bot):
     await bot.add_cog(Console(bot))

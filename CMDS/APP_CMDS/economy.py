@@ -1141,6 +1141,7 @@ class Economy(commands.Cog):
                 await interaction.response.send_message(f"Column `{column_name}` has been deleted from the `levels` table.", ephemeral=True)
                 Functions.Log(0, f"Column `{column_name}` removed from levels table.")
                 await self.f.give_xp(interaction.user,  interaction.guild)
+                
 
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
