@@ -55,7 +55,7 @@
    
    # File Paths
    # Replace with your actual file paths
-   BOTDATA_FILE_PATH="your_botdata_file_path"
+   BOTDATA_FILE_PATH=/data
    
    # Botdata hierarchy
    # Botdata -> Media -> Audio
