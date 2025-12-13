@@ -40,12 +40,7 @@
 - Groq API key (for AI features)
 
 ### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/PidgeyOnTheCat/ProjectGDB.git
-   cd ProjectGDB
-
-2. Get the docker-compose.yml file:
+1. Get the docker-compose.yml file:
    ```docker-comopse.yml
    version: "3.9"
    
@@ -58,7 +53,7 @@
          - ./data:/data
        restart: unless-stopped
 
-4. Get the .env file:
+2. Get the .env file:
    ```.env
    # API Keys and Tokens
    # Replace placeholders with your actual keys and tokens
