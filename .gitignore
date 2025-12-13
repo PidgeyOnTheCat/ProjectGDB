@@ -1,3 +1,5 @@
+.gitignore
+.dockerignore
 .env
 **/.git/
 **/__pycache__/

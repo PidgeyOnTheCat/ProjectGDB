@@ -20,11 +20,14 @@ bot = commands.Bot(command_prefix=">", intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
-    synced = await bot.tree.sync()
+    try:
+        synced = await bot.tree.sync()
 
-    print('---------------------------------')
-    print(f'successfully synced {len(synced)} commands.')
-    print(f'successfully logged in as {bot.user}\nBot version: {botVersion}\n_________________________________')
+        print('---------------------------------')
+        print(f'successfully synced {len(synced)} commands.')
+        print(f'successfully logged in as {bot.user}\nBot version: {botVersion}\n_________________________________')
+    except Exception as e:
+        print("Failed to sync:", e)
 
 async def load():
     # Importing all of the cogs
