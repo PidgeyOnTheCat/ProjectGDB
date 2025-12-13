@@ -7,4 +7,4 @@ PyNaCl
 groq
 colorama
 easy_pil
-PIL
+Pillow
