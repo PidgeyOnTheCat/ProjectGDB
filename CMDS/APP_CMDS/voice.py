@@ -9,6 +9,7 @@ from Functions import *
 from lists import *
 
 import aiosqlite, asyncio, random
+from pathlib import Path
 
 from dotenv import load_dotenv
 import os
@@ -83,9 +84,10 @@ class Voice(commands.Cog):
     async def soundboard(self, interaction: discord.Interaction, sound: str):
         # Get the current list of sounds
         sounds_list = []
-        for sound_file in os.listdir(f'{BOTDATA_FILE_PATH}/Media/Audio'):
-            if sound_file.endswith((".wav", ".mp3")):
-                sounds_list.append(sound_file)
+        audio_dir = Path(BOTDATA_FILE_PATH) / "Media/Audio"
+        for sound_file in audio_dir.iterdir():
+            if sound_file.suffix in (".wav", ".mp3"):
+                sounds_list.append(sound_file.name)
         
         # Validate the input
         if sound not in sounds_list:
@@ -120,8 +122,9 @@ class Voice(commands.Cog):
     ) -> list[app_commands.Choice[str]]:
         # Get the current list of sounds
         sounds_list = []
-        for sound_file in os.listdir(f"{BOTDATA_FILE_PATH}/Media/Audio"):
-            if sound_file.endswith((".wav", ".mp3")):
+        audio_dir = Path(BOTDATA_FILE_PATH) / "Media/Audio"
+        for sound_file in audio_dir.iterdir():
+            if sound_file.suffix in (".wav", ".mp3"):
                 sounds_list.append(sound_file)
         
         # Filter based on user input

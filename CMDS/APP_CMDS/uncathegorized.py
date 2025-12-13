@@ -7,7 +7,7 @@ from lists import *
 from version import botVersion
 
 import aiosqlite, asyncio, random, os
-
+from pathlib import Path
 from typing import Literal
 
 from groq import Groq
@@ -28,7 +28,7 @@ class Uncathegorized(commands.Cog):
         print("uncathegorized.py has loaded succesfully")
 
         # level database stuff
-        setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
+        setattr(self.bot, "db", await aiosqlite.connect(Path(BOTDATA_FILE_PATH) / "stats.db"))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
             await cursor.execute(

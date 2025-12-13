@@ -8,6 +8,7 @@ from typing import Literal
 from dotenv import load_dotenv
 from easy_pil import *
 from PIL import Image
+from pathlib import Path
 
 from lists import *
 from Functions import *
@@ -37,7 +38,8 @@ class Economy(commands.Cog):
         print("task looping succesfully")
         
         # level database stuff
-        setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
+        # setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
+        setattr(self.bot, "db", await aiosqlite.connect(Path(BOTDATA_FILE_PATH) / "stats.db"))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
             await cursor.execute(

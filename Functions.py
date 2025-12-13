@@ -5,6 +5,7 @@ from discord.ext import commands, tasks
 from discord import app_commands
 
 import requests, random, aiosqlite, asyncio
+from pathlib import Path
 
 from lists import logTypes
 
@@ -28,7 +29,7 @@ class Functions(commands.Cog):
         print("Functions.py has loaded successfully")
 
         # level database stuff
-        setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
+        setattr(self.bot, "db", await aiosqlite.connect(Path(BOTDATA_FILE_PATH) / "stats.db"))
         await asyncio.sleep(3)
         async with self.bot.db.cursor() as cursor:
             await cursor.execute(
