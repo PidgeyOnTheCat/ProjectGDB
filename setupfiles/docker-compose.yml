@@ -3,6 +3,7 @@ version: "3.9"
 services:
   projectgdb:
     image: pidgeycat/projectgdb:latest
+    container_name: projectgdb
     env_file:
       - .env
     volumes:
