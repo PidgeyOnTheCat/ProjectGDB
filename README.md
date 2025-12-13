@@ -63,7 +63,7 @@
    AI_API_KEY=your_openai_api_key
    
    # File Paths
-   # Replace with your actual file paths
+   # Don't replace this is if you are running it as a docker container
    BOTDATA_FILE_PATH=/data
    
    # Botdata hierarchy
