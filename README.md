@@ -40,10 +40,18 @@
 - Groq API key (for AI features)
 
 ### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/PidgeyOnTheCat/ProjectGDB.git
-   cd ProjectGDB
+1. Get the docker-compose.yml file:
+   ```docker-comopse.yml
+   version: "3.9"
+   
+   services:
+     projectgdb:
+       build: .
+       env_file:
+         - .env
+       volumes:
+         - ./data:/data
+       restart: unless-stopped
 
 2. Get the .env file:
    ```.env
@@ -58,5 +66,8 @@
    BOTDATA_FILE_PATH=/data
    
    # Botdata hierarchy
-   # Botdata -> Media -> Audio
+   # Botdata
+   #   Media
+   #      Audio
+   #      Images
 
