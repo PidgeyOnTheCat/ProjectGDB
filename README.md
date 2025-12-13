@@ -42,7 +42,7 @@
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ProjectGDB.git
+   git clone https://github.com/PidgeyOnTheCat/ProjectGDB.git
    cd ProjectGDB
 
 2. Get the .env file:
@@ -55,7 +55,7 @@
    
    # File Paths
    # Replace with your actual file paths
-   BOTDATA_FILE_PATH="your_botdata_file_path"
+   BOTDATA_FILE_PATH=/data
    
    # Botdata hierarchy
    # Botdata -> Media -> Audio
