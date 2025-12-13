@@ -511,7 +511,7 @@ class Economy(commands.Cog):
             profile = Editor(profile_picture).resize((150, 150)).circle_image()
             font1 = Font.poppins(size=40)
             font2 = Font.poppins(size=30)
-            coin_icon = Image.open(rf"{BOTDATA_FILE_PATH}\Media\Images\gdb_emoji_coin_downscaled.png").resize((96, 96))
+            coin_icon = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_emoji_coin_downscaled.png").resize((96, 96))
 
             card_right_shape = [(650, 0), (800, 330), (900, 330), (900, 0)]
 
