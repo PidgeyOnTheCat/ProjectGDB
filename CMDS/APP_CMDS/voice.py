@@ -120,12 +120,10 @@ class Voice(commands.Cog):
         interaction: discord.Interaction,
         current: str
     ) -> list[app_commands.Choice[str]]:
-        # Get the current list of sounds
-        sounds_list = []
         audio_dir = Path(BOTDATA_FILE_PATH) / "Media/Audio"
-        for sound_file in audio_dir.iterdir():
-            if sound_file.suffix in (".wav", ".mp3"):
-                sounds_list.append(sound_file)
+        
+        # Make a list of just the filenames (as strings)
+        sounds_list = [f.name for f in audio_dir.iterdir() if f.suffix in (".wav", ".mp3")]
         
         # Filter based on user input
         filtered_sounds = [
@@ -133,7 +131,7 @@ class Voice(commands.Cog):
             for sound in sounds_list
             if current.lower() in sound.lower()
         ][:25]  # Discord limits to 25 choices
-        
+
         return filtered_sounds
 
 async def setup(bot):

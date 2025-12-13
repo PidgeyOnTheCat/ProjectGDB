@@ -8,3 +8,4 @@ groq
 colorama
 easy_pil
 Pillow
+pathlib
