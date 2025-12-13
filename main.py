@@ -10,12 +10,6 @@ load_dotenv()
 # Load the token from the .env file
 TOKEN = os.getenv("TOKEN")
 
-# Clear the console
-if platform.system() == "Windows":
-    os.system("cls")
-else:
-    os.system("clear")
-
 bot = commands.Bot(command_prefix=">", intents=discord.Intents.all())
 
 @bot.event
