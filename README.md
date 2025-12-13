@@ -42,7 +42,7 @@
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ProjectGDB.git
+   git clone https://github.com/PidgeyOnTheCat/ProjectGDB.git
    cd ProjectGDB
 
 2. Get the .env file:
