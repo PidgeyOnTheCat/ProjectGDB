@@ -47,12 +47,12 @@
    services:
      projectgdb:
        image: pidgeycat/projectgdb:latest
+       container_name: projectgdb
        env_file:
          - .env
        volumes:
          - ./data:/data
        restart: unless-stopped
-
 
 2. Get the .env file:
    ```.env
