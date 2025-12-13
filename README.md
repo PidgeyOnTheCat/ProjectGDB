@@ -45,7 +45,20 @@
    git clone https://github.com/PidgeyOnTheCat/ProjectGDB.git
    cd ProjectGDB
 
-2. Get the .env file:
+2. Get the docker-compose.yml file:
+   ```docker-comopse.yml
+   version: "3.9"
+   
+   services:
+     projectgdb:
+       build: .
+       env_file:
+         - .env
+       volumes:
+         - ./data:/data
+       restart: unless-stopped
+
+4. Get the .env file:
    ```.env
    # API Keys and Tokens
    # Replace placeholders with your actual keys and tokens
