@@ -66,5 +66,8 @@
    BOTDATA_FILE_PATH=/data
    
    # Botdata hierarchy
-   # Botdata -> Media -> Audio
+   # Botdata
+   #   Media
+   #      Audio
+   #      Images
 
