@@ -229,10 +229,10 @@ class Functions(commands.Cog):
                     skillpointsamount = level / 5
                     skillpointsamount = int(skillpointsamount)
                     skillpoints += skillpointsamount
-                    await alerts_channel.send(f"{member.mention} has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!")
+                    await alerts_channel.send(f"{member.name} has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!")
                     Functions.Log(0, f"{member.name} leveled up to {level} got {skillpointsamount}")
                 else:
-                    await alerts_channel.send(f"{member.mention} has leveled up to level **{level}**!")
+                    await alerts_channel.send(f"{member.name} has leveled up to level **{level}**!")
                     Functions.Log(0, f"{member.name} leveled up to {level}")
 
                 await cursor.execute("UPDATE levels SET level = ?, xp = ?, skillpoints = ? WHERE user = ? AND guild = ?", (level, xp, skillpoints, member.id, guild.id))
