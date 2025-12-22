@@ -23,10 +23,6 @@ class Voice(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print("voice.py has loaded succesfully")
-
     @app_commands.command(name="join", description="Joins the voice call that you are in currently.")
     async def join(self, interaction: discord.Interaction):
         user = interaction.user

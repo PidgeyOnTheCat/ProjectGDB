@@ -13,10 +13,6 @@ class Console(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print("console.py has loaded succesfully")
-
     @app_commands.command(name="reload", description="Reloads a cog while the bot is running. (admin command)")
     async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','test','uncathegorized','voice','functions']):
         if interaction.user.guild_permissions.administrator:

@@ -15,116 +15,96 @@ from Functions import *
 
 # Load the environment variables
 load_dotenv()
-# Load the token from the .env file
 BOTDATA_FILE_PATH = os.getenv("BOTDATA_FILE_PATH")
+
 
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        # starts the voice call xp giver
+        # Start the voice call XP giver
         self.f = Functions(bot)
-        self.f.update_xp.start()
+
+        # Ensure database is initialized
+        if not hasattr(bot, "db"):
+            from database import Database  # Import your Database class
+            bot.db = Database(Path(BOTDATA_FILE_PATH) / "stats.db")
+            self.bot.loop.create_task(bot.db.connect())
 
     async def cog_unload(self):
         self.f.update_xp.cancel()
         return await super().cog_unload()
 
     @commands.Cog.listener()
-    async def on_ready(self):
-        print("economy.py has loaded succesfully")
-
-        await self.f.update_xp.start()
-        print("task looping succesfully")
-        
-        # level database stuff
-        # setattr(self.bot, "db", await aiosqlite.connect(f'{BOTDATA_FILE_PATH}/stats.db'))
-        setattr(self.bot, "db", await aiosqlite.connect(Path(BOTDATA_FILE_PATH) / "stats.db"))
-        await asyncio.sleep(3)
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS levels (
-                    level INTEGER, 
-                    xp INTEGER, 
-                    money INTEGER, 
-                    bank INTEGER, 
-                    user INTEGER, 
-                    guild INTEGER, 
-                    nword INTEGER, 
-                    skillpoints INTEGER, 
-                    skill_robfull_lvl INTEGER, 
-                    skill_robchance_lvl INTEGER, 
-                    skill_heistchance_lvl INTEGER,
-                    skill_banksecurity_lvl INTEGER
-                )
-                """
-            )
-
-    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        # Ignore messages sent by bots
         if message.author.bot:
             return
-        author = message.author
-        guild = message.guild
+        else:
+            author = message.author
+            guild = message.guild
 
-        # Give User xp and money
+        # Respond to every message
+        # await message.channel.send(f"Works! You said: {message.content}")
+
+        # Give user XP and money
         await self.f.give_xp(author, guild, 0)
-        
-        # Initialize DB
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (author.id, guild.id))
-            xp = await cursor.fetchone()
-            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (author.id, guild.id))
-            level = await cursor.fetchone()
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (author.id, guild.id))
-            money = await cursor.fetchone()
-            await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (author.id, guild.id))
-            bank = await cursor.fetchone()
-            await cursor.execute("SELECT nword FROM levels WHERE user = ? AND guild = ?", (author.id, guild.id))
-            nword = await cursor.fetchone()
-            await cursor.execute("SELECT skillpoints FROM levels WHERE user = ? AND guild = ?", (author.id, guild.id))
-            skillpoints = await cursor.fetchone()
 
-            if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, author.id, guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.db.commit()
+        # Ensure user exists
+        await self.bot.db.execute(
+            """
+            INSERT INTO levels (user, guild)
+            VALUES (?, ?)
+            ON CONFLICT(user, guild) DO NOTHING
+            """,
+            (author.id, guild.id)
+        )
 
-            try:
-                xp = xp[0]
-                level = level[0]
-                money = money[0]
-                bank = bank[0]
-                nword = nword[0]
-                skillpoints = skillpoints[0]
-            except TypeError:
-                xp = 0
-                level = 0
-                money = 0
-                bank = 0
-                nword = 0
-                skillpoints = 0
+        # Fetch stats
+        result = await self.bot.db.fetchone(
+            "SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?",
+            (author.id, guild.id)
+        )
 
-            for word in nword_list:
-                if word in message.content.lower():
-                    nword += 1
-                    await cursor.execute("UPDATE levels SET nword = ? WHERE user = ? AND guild = ?", (nword, author.id, guild.id))
-                    await message.channel.send(f":thumbsdown:  \nNo racism!")
-                    Functions.Log(0, f"{author.name} has said the N-word.")
+        if result:
+            xp, level, money, bank, nword, skillpoints = result
+        else:
+            xp = level = money = bank = nword = skillpoints = 0
 
-            if random.randint(1, 1000000) == 1: # 1, 1000000 / 1, 5
-                level += 5
-                await cursor.execute("UPDATE levels SET level = ? WHERE user = ? AND guild = ?", (level, author.id, guild.id))
-                await cursor.execute("UPDATE levels SET xp = ? WHERE user = ? AND guild = ?", (0, author.id, guild.id))
+        # -------------------------
+        # N-WORD FILTER
+        # -------------------------
+        for word in nword_list:
+            if word in message.content.lower():
+                nword += 1
+                await self.bot.db.execute(
+                    "UPDATE levels SET nword = ? WHERE user = ? AND guild = ?",
+                    (nword, author.id, guild.id)
+                )
+                await message.channel.send(":thumbsdown:  \nNo racism!")
+                Functions.Log(0, f"{author.name} has said the N-word.")
 
-                await message.channel.send(f"{author.mention} has discovered a one in a million easter egg and gained 5 extra levels!")
-                Functions.Log(0, f"{author.name} has discovered a one in a million easter egg and gained 5 extra levels!")
+        # -------------------------
+        # One-in-a-million Easter Egg
+        # -------------------------
+        if random.randint(1, 1000000) == 1:
+            await message.channel.send(
+                f"{author.mention} has discovered a one in a million easter egg and gained 5 extra levels!"
+            )
+            await self.f.levelup(author, guild)
+            await self.f.levelup(author, guild)
+            await self.f.levelup(author, guild)
+            await self.f.levelup(author, guild)
+            await self.f.levelup(author, guild)
 
-            await self.bot.db.commit()
-            await self.bot.process_commands(message)
+            Functions.Log(0, f"{author.name} discovered a one-in-a-million easter egg and gained 5 extra levels!")
+
+        # Important: let commands still work
+        await self.bot.process_commands(message)
 
     @commands.Cog.listener()
     async def on_app_command_completion(self, interaction: discord.Interaction, command: app_commands.Command):
+        # Give XP for slash commands
         await self.f.give_xp(interaction.user, interaction.guild, 1)
 
     # Define all of the app commands
@@ -462,44 +442,39 @@ class Economy(commands.Cog):
 
     @app_commands.command(name="stats", description="Show a user's current statistics")
     async def stats(self, interaction: discord.Interaction, member: discord.Member = None):
-        ctx = await self.bot.get_context(interaction)
-        if member is None:
-            member = ctx.author
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            xp = await cursor.fetchone()
-            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            level = await cursor.fetchone()
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
-            await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            bank = await cursor.fetchone()
-            await cursor.execute("SELECT skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skillpoints = await cursor.fetchone()
+        try:
+            ctx = await self.bot.get_context(interaction)
+            if member is None:
+                member = ctx.author
 
-            if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
+            # Ensure the user row exists (insert if not exists)
+            await self.bot.db.execute(
+                """
+                INSERT INTO levels (user, guild, level, xp, money, bank, skillpoints, nword, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl)
+                VALUES (?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                ON CONFLICT(user, guild) DO NOTHING
+                """,
+                (member.id, ctx.guild.id)
+            )
 
-            try:
-                xp = xp[0]
-                level = level[0]
-                money = money[0]
-                bank = bank[0]
-                skillpoints = skillpoints[0]
-            except TypeError:
-                xp = 0
-                level = 0
-                money = 0
-                bank = 0
-                skillpoints = 0
+            # Fetch all stats at once
+            result = await self.bot.db.fetchone(
+                "SELECT xp, level, money, bank, skillpoints FROM levels WHERE user = ? AND guild = ?",
+                (member.id, ctx.guild.id)
+            )
 
-            # Calculate xp needed for level up
+            # Safe unpacking
+            if result:
+                xp, level, money, bank, skillpoints = result
+            else:
+                xp = level = money = bank = skillpoints = 0
+
+            # Calculate XP left for next level
             xp_required = (level + 1) * 100
-            xp_left = xp_required - xp 
+            xp_left = xp_required - xp
 
             user_data = {
-                "name": f"{member.name}",
+                "name": member.name,
                 "level": level,
                 "xp": xp,
                 "xp_left": xp_left,
@@ -508,6 +483,7 @@ class Economy(commands.Cog):
                 "skillpoints": skillpoints
             }
 
+            # Build the stats card image
             background = Editor(Canvas((900, 330), color="#141414"))
             profile_picture = await load_image_async(str(member.avatar.url))
             profile = Editor(profile_picture).resize((150, 150)).circle_image()
@@ -516,18 +492,19 @@ class Economy(commands.Cog):
             coin_icon = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_emoji_coin_downscaled.png").resize((96, 96))
 
             card_right_shape = [(650, 0), (800, 330), (900, 330), (900, 0)]
-
             background.polygon(card_right_shape, color="#CFCFCF")
             background.paste(profile, (30, 30))
 
             background.rectangle((30, 260), width=650, height=40, color="#FFFFFF", radius=22)
-            background.bar((30, 260), max_width=650, height=41, percentage=user_data["xp"] / (user_data["xp"] + user_data["xp_left"]) * 100, color="#9323CB", radius=22)
-            background.text((200, 40), user_data["name"], font=font1, color="#FFFFFF")
+            background.bar((30, 260), max_width=650, height=41,
+                        percentage=user_data["xp"] / (user_data["xp"] + user_data["xp_left"]) * 100,
+                        color="#9323CB", radius=22)
 
+            background.text((200, 40), user_data["name"], font=font1, color="#FFFFFF")
             background.rectangle((200, 100), width=350, height=2, fill="#7D1DAD")
             background.text(
                 (200, 130),
-                f"Level: {user_data['level']} | XP: {user_data['xp']} / {user_data['xp_left'] + user_data['xp']}",
+                f"Level: {user_data['level']} | XP: {user_data['xp']} / {user_data['xp'] + user_data['xp_left']}",
                 font=font2,
                 color="#FFFFFF"
             )
@@ -549,11 +526,11 @@ class Economy(commands.Cog):
             file = discord.File(fp=background.image_bytes, filename="stats_card.png")
             await interaction.response.send_message(file=file)
 
-            Functions.Log(0, "Stats command used")
+            Functions.Log(0, f"[{member.name}] used stats command")
 
-    @stats.error
-    async def stats_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
-        await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
+        except Exception as e:
+            Functions.Log(2, f"Error in stats command: {e}")
+            await interaction.response.send_message(f"An error occurred while fetching stats: {e}", ephemeral=True)
 
     @app_commands.command(name="pickpocket", description="Rob a user for their money.")
     @app_commands.checks.cooldown(1, Functions.hoursToSeconds(3), key=lambda i: (i.guild_id, i.user.id))
@@ -1143,11 +1120,8 @@ class Economy(commands.Cog):
                 await interaction.response.send_message(f"Column `{column_name}` has been deleted from the `levels` table.", ephemeral=True)
                 Functions.Log(0, f"Column `{column_name}` removed from levels table.")
                 await self.f.give_xp(interaction.user,  interaction.guild)
-                
-
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         
-
 async def setup(bot):
     await bot.add_cog(Economy(bot))
