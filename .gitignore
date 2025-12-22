@@ -6,3 +6,5 @@
 **/.vscode/
 gdb/
 setupfiles/
+BotData/
+run.bat

@@ -6,3 +6,5 @@ __pycache__*
 .vscode*
 gdb/
 setupfiles/
+BotData/
+run.bat

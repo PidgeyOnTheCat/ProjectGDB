@@ -54,7 +54,7 @@ class Functions(commands.Cog):
     # Main functions
     def Log(type, message):
         try:
-            print(f"[{dt.now().strftime('%H:%M:%S')}] [ {logTypes[type]} ] {message}")
+            print(f"[{dt.now().strftime('%d.%m.%Y')}] [{dt.now().strftime('%H:%M:%S')}] [ {logTypes[type]} ] {message}")
         except Exception as e:
             print(f"Error logging message: {e}")
 
