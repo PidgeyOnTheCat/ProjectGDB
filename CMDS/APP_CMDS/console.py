@@ -7,8 +7,6 @@ from discord import app_commands
 from Functions import *
 from lists import *
 
-import aiosqlite, asyncio
-
 class Console(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -18,7 +16,7 @@ class Console(commands.Cog):
         if interaction.user.guild_permissions.administrator:
             await self.bot.reload_extension(name=f"CMDS.APP_CMDS.{cog}")
             await interaction.response.send_message(f'{cog} cog reloaded', ephemeral=True)
-            Functions.Log(0, f"{cog} cog reloaded")
+            Functions.Log(0, f"[{interaction.user.name}] reloaded {cog} cog")
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
@@ -31,6 +29,59 @@ class Console(commands.Cog):
             os._exit(0)
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+
+    @app_commands.command(name="sql", description="Execute SQL query. (admin command)")
+    async def sql(self, interaction: discord.Interaction, query: str):
+        # Only allow your Discord ID
+        if interaction.user.id != 650748710543687735:
+            await interaction.response.send_message(
+                "You don't have permission to use this command.", ephemeral=True
+            )
+            return
+
+        # Block dangerous queries
+        blocked = ["drop table", "delete from levels", "vacuum"]
+        if any(b in query.lower() for b in blocked):
+            await interaction.response.send_message("Command blocked for safety 💀", ephemeral=True)
+            return
+
+        try:
+            # Detect SELECT queries
+            if query.strip().lower().startswith("select"):
+                rows = await self.bot.db.fetchall(query)
+                # Format output nicely (limit length if needed)
+                output = "\n".join(
+                    ", ".join(f"{k}={row[k]}" for k in row.keys())
+                    for row in rows
+                )
+                await interaction.response.send_message(f"Query returned:\n```{output}```", ephemeral=True)
+            else:
+                # Non-SELECT queries
+                await self.bot.db.execute(query)
+                await interaction.response.send_message("Query executed successfully.", ephemeral=True)
+
+            Functions.Log(0, f"[{interaction.user.name}] used SQL Query: {query}")
+
+        except Exception as e:
+            await interaction.response.send_message(f"Error executing query: {e}", ephemeral=True)
+            Functions.Log(2, f"SQL error by {interaction.user.name}: {e}")
+
+    @app_commands.command(name="userlookup", description="Execute SQL query. (admin command)")
+    async def userlookup(self, interaction: discord.Interaction, id: str):
+        try:
+            id = int(id)
+        except ValueError:
+            await interaction.response.send_message("Invalid user ID.", ephemeral=True)
+            return
+
+        try:
+            username = await self.bot.fetch_user(id)
+        except Exception as e:
+            await interaction.response.send_message(f"Error fetching user: {e}", ephemeral=True)
+            return
+        
+        await interaction.response.send_message(f"Username of userid: **{id}** is **{username}**", ephemeral=True)
+        Functions.Log(0, f"[{interaction.user.name}] used userlookup {id}")
 
 async def setup(bot):
     await bot.add_cog(Console(bot))

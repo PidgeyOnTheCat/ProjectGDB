@@ -6,7 +6,7 @@ from Functions import *
 from lists import *
 from version import botVersion
 
-import aiosqlite, asyncio, random, os
+import random, os
 from pathlib import Path
 
 from groq import Groq
@@ -114,31 +114,11 @@ class Uncathegorized(commands.Cog):
         if member is None:
             member = ctx.author
 
-        # Ensure user exists
-        await self.bot.db.execute(
-            """
-            INSERT INTO levels (user, guild)
-            VALUES (?, ?)
-            ON CONFLICT(user, guild) DO NOTHING
-            """,
-            (member.id, member.guild.id)
-        )
+        data = await self.bot.db.get_user(member.id, ctx.guild.id)
 
-        # Fetch stats
-        result = await self.bot.db.fetchone(
-            "SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?",
-            (member.id, member.guild.id)
-        )
+        await interaction.response.send_message(f"{member.mention} has said the N-word **{data['nword']}** times")
 
-        if result:
-            xp, level, money, bank, nword, skillpoints = result
-        else:
-            xp = level = money = bank = nword = skillpoints = 0
-
-        await interaction.response.send_message(f"{member.mention} has said the N-word **{nword}** times")
-
-        self.Log(0, f"[{member.name}] checked N-word count: {nword}")
-
+        self.Log(0, f"[{member.name}] checked N-word count: {data['nword']}")
 
     # -------------------- TRUTH/DARE/WYR -------------------- #
     async def _send_tdw(self, interaction: discord.Interaction, type_: str):

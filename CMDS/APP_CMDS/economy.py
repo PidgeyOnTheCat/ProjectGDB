@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 
-import aiosqlite, asyncio, random, os
+import random, os
 
 from typing import Literal
 from dotenv import load_dotenv
@@ -50,26 +50,10 @@ class Economy(commands.Cog):
         # Give user XP and money
         await self.f.give_xp(author, guild, 0)
 
-        # Ensure user exists
-        await self.bot.db.execute(
-            """
-            INSERT INTO levels (user, guild)
-            VALUES (?, ?)
-            ON CONFLICT(user, guild) DO NOTHING
-            """,
-            (author.id, guild.id)
-        )
+        # Fetch user data
 
-        # Fetch stats
-        result = await self.bot.db.fetchone(
-            "SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?",
-            (author.id, guild.id)
-        )
-
-        if result:
-            xp, level, money, bank, nword, skillpoints = result
-        else:
-            xp = level = money = bank = nword = skillpoints = 0
+        data = await self.bot.db.get_user(author.id, guild.id)
+        nword = data['nword']
 
         # -------------------------
         # N-WORD FILTER
@@ -113,288 +97,171 @@ class Economy(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
 
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            xp = await cursor.fetchone()
-            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            level = await cursor.fetchone()
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
-            await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            bank = await cursor.fetchone()
-            await cursor.execute("SELECT skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skillpoints = await cursor.fetchone()
+        # Fetch userdata
+        userdata = await self.bot.db.get_user(member.id, ctx.guild.id)
+        level = userdata['level']
+        money = userdata['money']
+        xp = userdata['xp']
 
-            if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
+        xp_required = (level + 1) * 100
+        money_required = xp_required - xp
 
-            try:
-                xp = xp[0]
-                level = level[0]
-                money = money[0]
-                bank = bank[0]
-                skillpoints = skillpoints[0]
-            except TypeError:
-                xp = 0
-                level = 0
-                money = 0
-                bank = 0
-                skillpoints = 0
+        # Make it cost 5 times more money to level up past lvl 100
+        if level <= 100:
+            money_required *= 10
+        else:
+            money_required *= 50
 
-            xp_required = (level + 1) * 100
-            money_required = xp_required - xp
+        if money >= money_required:
+            await self.f.levelup(member, ctx.guild)
 
-            # Make it cost 5 times more money to level up past lvl 100
-            if level <= 100:
-                money_required *= 10
-            else:
-                money_required *= 50
+            money -= money_required
+            await self.bot.db.execute(
+                "UPDATE levels SET money = ? WHERE user = ? AND guild = ?",
+                (money, member.id, ctx.guild.id)
+            )
+            await ctx.send(f"You have leveled up to level {level + 1} by paying {money_required} <:gdb_emoji_coin:1376156520030404650>!", ephemeral=True)
+            Functions.Log(0, f"[{member.name}] leveled up by paying {money_required}")
 
-            if money >= money_required:
-                level += 1
+        else:
+            await ctx.send(f"You don't have enough <:gdb_emoji_coin:1376156520030404650> for a levelup\nYou need {money_required} <:gdb_emoji_coin:1376156520030404650> but you only have {money} <:gdb_emoji_coin:1376156520030404650>", ephemeral=True)
 
-                if level % 5 == 0:
-                    #skillpointsamount = level / 5
-                    #skillpointsamount = int(skillpointsamount)
-                    skillpointsamount = 1
-                    skillpoints += skillpointsamount
-                    await ctx.send(f"{member.mention} has paid {money_required} <:gdb_emoji_coin:1376156520030404650> and has leveled up to level **{level}** and has gained **{skillpointsamount}** skill points!!")
-                else:
-                    await ctx.send(f"{member.mention} has paid {money_required} <:gdb_emoji_coin:1376156520030404650> and has leveled up to level **{level}**!")
-
-                money -= money_required
-                await cursor.execute("UPDATE levels SET level = ? WHERE user = ? AND guild = ?", (level, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET xp = ? WHERE user = ? AND guild = ?", (0, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, member.id, ctx.guild.id))
-            else:
-                await ctx.send(f"You don't have enough <:gdb_emoji_coin:1376156520030404650> for a levelup\nYou need {money_required} <:gdb_emoji_coin:1376156520030404650> but you only have {money} <:gdb_emoji_coin:1376156520030404650>", ephemeral=True)
-
-        await self.bot.db.commit()
-        Functions.Log(0, "Levelup command used")
-
-    @app_commands.command(name="deposit", description="Deposit a certain amount of money into your bank account.")
-    async def deposit(self, interaction: discord.Interaction, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
+    @app_commands.command(name="deposit",description="Deposit a certain amount of money into your bank account.")
+    async def deposit(self, interaction: discord.Interaction,amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
+        guild = ctx.guild
 
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            xp = await cursor.fetchone()
-            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            level = await cursor.fetchone()
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
-            await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            bank = await cursor.fetchone()
+        # Fetch user row (guarantees it exists)
+        row = await self.bot.db.get_user(member.id, guild.id)
 
-            if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
+        money = row['money']
+        bank = row['bank']
 
-            try:
-                xp = xp[0]
-                level = level[0]
-                money = money[0]
-                bank = bank[0]
-            except TypeError:
-                xp = 0
-                level = 0
-                money = 0
-                bank = 0
+        # Determine deposit amount
+        if amount == 'all':
+            deposited = money
+        else:
+            deposited = int(amount)
 
-            try:
-                amount = int(amount)
-            except:
-                amount = money
+        # Check for invalid deposits
+        if money <= 0 or deposited <= 0:
+            await ctx.send(f"You can't deposit nothing into your bank account",ephemeral=True)
+            return
 
-            if money == 0:
-                await ctx.send(f"You can't deposit nothing into your bank account", ephemeral=True)
-            elif amount > money:
-                await ctx.send(f"{member.mention} has deposited {money} <:gdb_emoji_coin:1376156520030404650> into their bank account.")
+        # Cap deposit to available money
+        if deposited > money:
+            deposited = money
 
-                bank += money
-                money -= money
-                
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
+        # Update balances
+        money -= deposited
+        bank += deposited
 
-            elif amount <= 0:
-                await ctx.send(f"You can't deposit nothing into your bank account", ephemeral=True)
+        # Persist changes
+        await self.bot.db.execute(
+            "UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?",
+            (money, bank, member.id, guild.id)
+        )
 
-            else:
-                money -= amount
-                bank += amount
+        # Feedback message
+        await ctx.send(
+            f"{member.mention} has deposited {deposited} <:gdb_emoji_coin:1376156520030404650> into their bank account."
+        )
 
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
+        Functions.Log(0, f"[{member.name}] deposited {deposited} coins")
 
-                await ctx.send(f"{member.mention} has deposited {amount} <:gdb_emoji_coin:1376156520030404650> into their bank account.")
-            
-        await self.bot.db.commit()
-        Functions.Log(0, "Deposit command used")
 
     @app_commands.command(name="withdraw", description="Withdraw a certain amount of money from your bank account.")
-    async def withdraw(self, interaction: discord.Interaction, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
+    async def withdraw(self,interaction: discord.Interaction,amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
+        guild = ctx.guild
 
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            xp = await cursor.fetchone()
-            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            level = await cursor.fetchone()
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
-            await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            bank = await cursor.fetchone()
+        # Fetch user row (guarantees it exists)
+        row = await self.bot.db.get_user(member.id, guild.id)
 
-            if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
+        money = row['money']
+        bank = row['bank']
 
-            try:
-                xp = xp[0]
-                level = level[0]
-                money = money[0]
-                bank = bank[0]
-            except TypeError:
-                xp = 0
-                level = 0
-                money = 0
-                bank = 0
+        # Determine withdraw amount
+        if amount == 'all':
+            withdrawn = bank
+        else:
+            withdrawn = int(amount)
 
-            try:
-                amount = int(amount)
-            except:
-                amount = bank
+        # Check for invalid withdraw
+        if bank <= 0 or withdrawn <= 0:
+            await ctx.send(f"You can't withdraw nothing from your bank account.",ephemeral=True)
+            return
 
-            if bank <= 0:
-                await ctx.send(f"You can't withdraw nothing from your bank account.", ephemeral=True)
+        # Cap withdrawal to available bank balance
+        if withdrawn > bank:
+            withdrawn = bank
 
-            elif amount > bank:
-                await ctx.send(f"{member.mention} has withdrawn {bank} <:gdb_emoji_coin:1376156520030404650> from their bank account.")
+        # Update balances
+        money += withdrawn
+        bank -= withdrawn
 
-                money += bank
-                bank -= bank
+        # Persist changes
+        await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?",(money, bank, member.id, guild.id))
 
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
+        # Feedback message
+        await ctx.send(f"{member.name} has withdrawn {withdrawn} <:gdb_emoji_coin:1376156520030404650> from their bank account.")
 
-            elif amount <= 0:
-                await ctx.send(f"You can't withdraw nothing from your bank account.", ephemeral=True)
+        Functions.Log(0, f"[{member.mention}] Withdraw command used")
 
-            else:
-                await ctx.send(f"{member.mention} has withdrawn {amount} <:gdb_emoji_coin:1376156520030404650> from their bank account.")
-
-                money += amount
-                bank -= amount
-
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
-
-        await self.bot.db.commit()
-        Functions.Log(0, "Withdraw command used")
-
-    @app_commands.command(name="givemoney", description="Give a user a certain amount of money. (admin command)")
-    async def givemoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+    @app_commands.command(name="addmoney", description="Give a user a certain amount of money. (admin command)")
+    async def addmoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
         ctx = await self.bot.get_context(interaction)
+        guild = ctx.guild
 
         if interaction.user.guild_permissions.administrator:
-            async with self.bot.db.cursor() as cursor:
-                await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                xp = await cursor.fetchone()
-                await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                level = await cursor.fetchone()
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                money = await cursor.fetchone()
-                await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                bank = await cursor.fetchone()
+            row = await self.bot.db.get_user(member.id, guild.id)
 
-                if not xp or not level:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
+            money = row['money']
+            bank = row['bank']
 
-                try:
-                    xp = xp[0]
-                    level = level[0]
-                    money = money[0]
-                    bank = bank[0]
-                except TypeError:
-                    xp = 0
-                    level = 0
-                    money = 0
-                    bank = 0
+            if amount <= 0:
+                await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
+            else:
+                money += amount
+                await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
+                await interaction.response.send_message(f"**{member}** now has **{money}** money and {bank} money in their bank.", ephemeral=True)
 
-                if amount <= 0:
-                    await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
-                else:
-                    money += amount
-                    await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                    await interaction.response.send_message(f"`{member}` now has **{money}** money and {bank} money in their bank.", ephemeral=True)
-
-            await self.bot.db.commit()
-            Functions.Log(0, "Give money command used")
-            
-
+                Functions.Log(0, f"[{member.name}] Add money command used (admin)")
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
-        Functions.Log(0, "Give money command used")
-
-    @app_commands.command(name="takemoney", description="Take a certain amount of money from a user. (admin command)")
-    async def takemoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+    @app_commands.command(name="removemoney", description="Take a certain amount of money from a user. (admin command)")
+    async def removemoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
         ctx = await self.bot.get_context(interaction)
+        guild = ctx.guild
 
         if interaction.user.guild_permissions.administrator:
-            async with self.bot.db.cursor() as cursor:
-                await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                xp = await cursor.fetchone()
-                await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                level = await cursor.fetchone()
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                money = await cursor.fetchone()
-                await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                bank = await cursor.fetchone()
+            row = await self.bot.db.get_user(member.id, guild.id)
 
-                if not xp or not level:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
+            money = row['money']
+            bank = row['bank']
 
-                try:
-                    xp = xp[0]
-                    level = level[0]
-                    money = money[0]
-                    bank = bank[0]
-                except TypeError:
-                    xp = 0
-                    level = 0
-                    money = 0
-                    bank = 0
-
-                if amount <= 0:
-                    await interaction.response.send_message("You can't take the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
+            if amount <= 0:
+                await interaction.response.send_message("You can't take the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
+            else:
+                if money >= amount:
+                    money -= amount
                 else:
-                    if money >= amount:
-                        money -= amount
+                    bank_take = amount - money
+                    money = 0
+
+                    if bank >= bank_take:
+                        bank -= bank_take
                     else:
-                        bank_take = amount - money
-                        money = 0
+                        bank = 0
+                    
+                await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (money, bank, member.id, guild.id))
+                
+                await interaction.response.send_message(f"**{member}** now has **{money}** money and {bank} money in their bank.", ephemeral=True)
 
-                        if bank >= bank_take:
-                            bank -= bank_take
-                        else:
-                            bank = 0
-                        
-                    await interaction.response.send_message(f"`{member}` now has **{money}** money and {bank} money in their bank.", ephemeral=True)
-
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bank, member.id, ctx.guild.id))
-
-            await self.bot.db.commit()
-            Functions.Log(0, "Take money command used")
-
+                Functions.Log(0, f"[{member.name}] Remove money command used (admin)")
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
@@ -446,28 +313,15 @@ class Economy(commands.Cog):
             ctx = await self.bot.get_context(interaction)
             if member is None:
                 member = ctx.author
+            guild = ctx.guild
 
             # Ensure the user row exists (insert if not exists)
-            await self.bot.db.execute(
-                """
-                INSERT INTO levels (user, guild, level, xp, money, bank, skillpoints, nword, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl)
-                VALUES (?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                ON CONFLICT(user, guild) DO NOTHING
-                """,
-                (member.id, ctx.guild.id)
-            )
-
-            # Fetch all stats at once
-            result = await self.bot.db.fetchone(
-                "SELECT xp, level, money, bank, skillpoints FROM levels WHERE user = ? AND guild = ?",
-                (member.id, ctx.guild.id)
-            )
-
-            # Safe unpacking
-            if result:
-                xp, level, money, bank, skillpoints = result
-            else:
-                xp = level = money = bank = skillpoints = 0
+            row = await self.bot.db.get_user(member.id, guild.id)
+            xp = row['xp']
+            level = row['level']
+            money = row['money']
+            bank = row['bank']
+            skillpoints = row['skillpoints']
 
             # Calculate XP left for next level
             xp_required = (level + 1) * 100
@@ -541,102 +395,68 @@ class Economy(commands.Cog):
         if member == ctx.author:
             await interaction.response.send_message("You can't rob yourself.", ephemeral=True)
         else:
-            async with self.bot.db.cursor() as cursor:
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (robber.id, ctx.guild.id))
-                moneyrobber = await cursor.fetchone()
-                await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (robber.id, ctx.guild.id))
-                bankrobber = await cursor.fetchone()
+            rowRobber = await self.bot.db.get_user(robber.id, ctx.guild.id)
+            rowVictim = await self.bot.db.get_user(member.id, ctx.guild.id)
+            
+            moneyrobber = rowRobber['money']
+            bankrobber = rowRobber['bank']
 
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                moneymember = await cursor.fetchone()
-                await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                bankmember = await cursor.fetchone()
+            skill_robchance_lvl = rowRobber['skill_robchance_lvl']
+            skill_robfull_lvl = rowRobber['skill_robfull_lvl']
 
-                await cursor.execute("SELECT skill_robfull_lvl FROM levels WHERE user = ? AND guild = ?", (robber.id, ctx.guild.id))
-                skill_robfull_lvl = await cursor.fetchone()
-                await cursor.execute("SELECT skill_robchance_lvl FROM levels WHERE user = ? AND guild = ?", (robber.id, ctx.guild.id))
-                skill_robchance_lvl = await cursor.fetchone()
-
-                if not moneyrobber:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, robber.id, ctx.guild.id, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
-                
-                if not moneymember:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
-
-                try:
-                    moneyrobber = moneyrobber[0]
-                    moneymember = moneymember[0]
-
-                    bankrobber = bankrobber[0]
-                    bankmember = bankmember[0]
-
-                    skill_robfull_lvl = skill_robfull_lvl[0]
-                    skill_robchance_lvl = skill_robchance_lvl[0]
-                except TypeError:
-                    moneyrobber = 0
-                    moneymember = 0
-
-                    bankrobber = 0
-                    bankmember = 0
-
-                    skill_robfull_lvl = 0
-                    skill_robchance_lvl = 0
+            moneymember = rowVictim['money']
+            bankmember = rowVictim['bank']
 
 
-                if moneymember >= 500:
-                    baseChance = 20 # 20% chance to rob
-                    baseChance += skill_robchance_lvl * 3
+            if moneymember >= 500:
+                baseChance = 20 # 20% chance to rob
+                baseChance += skill_robchance_lvl * 3
+                chance = random.randint(1, 100)
+
+                if chance <= baseChance:
                     chance = random.randint(1, 100)
+                    baseChanceFullrob = 10
+                    baseChanceFullrob += skill_robfull_lvl * 2
+                    if chance <= baseChanceFullrob:
+                        robtake = moneymember
 
-                    if chance <= baseChance:
-                        chance = random.randint(1, 100)
-                        baseChanceFullrob = 10
-                        baseChanceFullrob += skill_robfull_lvl * 2
-                        if chance <= baseChanceFullrob:
-                            robtake = moneymember
+                        moneymember -= robtake
+                        moneyrobber += robtake
 
-                            moneymember -= robtake
-                            moneyrobber += robtake
-
-                            await interaction.response.send_message(f"{robber.mention} stole all <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
-                        else:
-                            robtake = moneymember * random.uniform(0.40, 0.75)
-                            robtake = int(round(robtake, 0))
-
-                            moneymember -= robtake
-                            moneyrobber += robtake
-
-                            await interaction.response.send_message(f"{robber.mention} stole {robtake} <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
-
+                        await interaction.response.send_message(f"{robber.mention} stole all <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
                     else:
-                        fine = moneymember * random.uniform(0.5, 0.75)
-                        fine = int(round(fine, 0))
+                        robtake = moneymember * random.uniform(0.40, 0.75)
+                        robtake = int(round(robtake, 0))
 
-                        if moneyrobber < fine: # robber doesnt have enough money
-                            fine -= moneyrobber
-                            moneyrobber = 0
+                        moneymember -= robtake
+                        moneyrobber += robtake
 
-                            if bankrobber < fine: # robber doesnt have enough bank
-                                fine = int(round(fine / 2, 0))
-                                bankrobber -= fine
-                                bankmember += fine
-                            else: # robber does have enough bank to pay
-                                bankrobber -= fine
-                        else: # robber does have enough money to pay
-                            moneyrobber -= fine
-                            bankmember += fine
+                        await interaction.response.send_message(f"{robber.mention} stole {robtake} <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
 
-                        await interaction.response.send_message(f"{robber.mention} just got caught trying to pickpocket {member.mention} and got fined for {fine} <:gdb_emoji_coin:1376156520030404650>.")
                 else:
-                    await interaction.response.send_message("This user doesn't have enough money in their pocket. \n(500 <:gdb_emoji_coin:1376156520030404650> required)", ephemeral=True)
+                    fine = moneymember * random.uniform(0.5, 0.75)
+                    fine = int(round(fine, 0))
 
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneyrobber, robber.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankrobber, robber.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankmember, member.id, ctx.guild.id))
-            await self.bot.db.commit()
+                    if moneyrobber < fine: # robber doesnt have enough money
+                        fine -= moneyrobber
+                        moneyrobber = 0
+
+                        if bankrobber < fine: # robber doesnt have enough bank
+                            fine = int(round(fine / 2, 0))
+                            bankrobber -= fine
+                            bankmember += fine
+                        else: # robber does have enough bank to pay
+                            bankrobber -= fine
+                    else: # robber does have enough money to pay
+                        moneyrobber -= fine
+                        bankmember += fine
+
+                    await interaction.response.send_message(f"{robber.mention} just got caught trying to pickpocket {member.mention} and got fined for {fine} <:gdb_emoji_coin:1376156520030404650>.")
+            else:
+                await interaction.response.send_message("This user doesn't have enough money in their pocket. \n(500 <:gdb_emoji_coin:1376156520030404650> required)", ephemeral=True)
+
+            await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (moneyrobber, bankrobber, robber.id, ctx.guild.id))
+            await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (moneymember, bankmember, member.id, ctx.guild.id))
             Functions.Log(0, "Pickpocket command used")
     
     @pickpocket.error
