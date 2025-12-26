@@ -265,48 +265,6 @@ class Economy(commands.Cog):
         else:
             await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
-    @app_commands.command(name="oldstats", description="Show a user's current statistics (OLD MENU)")
-    async def oldstats(self, interaction: discord.Interaction, member: discord.Member = None):
-        ctx = await self.bot.get_context(interaction)
-        if member is None:
-            member = ctx.author
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            xp = await cursor.fetchone()
-            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            level = await cursor.fetchone()
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
-            await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            bank = await cursor.fetchone()
-            await cursor.execute("SELECT skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skillpoints = await cursor.fetchone()
-
-            if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
-
-            try:
-                xp = xp[0]
-                level = level[0]
-                money = money[0]
-                bank = bank[0]
-                skillpoints = skillpoints[0]
-            except TypeError:
-                xp = 0
-                level = 0
-                money = 0
-                bank = 0
-                skillpoints = 0
-
-            # Calculate xp needed for level up
-            xp_required = (level + 1) * 100
-            xp_left = xp_required - xp 
-
-            em = discord.Embed(title=f"{member.name}'s Level", color=discord.Color.blurple(), description=f"Level : `{level}`\nXP: `{xp}`\nXP left : `{xp_left}`\n<:gdb_emoji_coin:1376156520030404650> in pocket : `{money}` <:gdb_emoji_coin:1376156520030404650>\n<:gdb_emoji_coin:1376156520030404650> in bank : `{bank}` <:gdb_emoji_coin:1376156520030404650>\nUnused Skillpoints : `{skillpoints}`")
-            await ctx.send(embed=em)
-            Functions.Log(0, "Old Stats command used")
-
     @app_commands.command(name="stats", description="Show a user's current statistics")
     async def stats(self, interaction: discord.Interaction, member: discord.Member = None):
         try:
@@ -380,7 +338,7 @@ class Economy(commands.Cog):
             file = discord.File(fp=background.image_bytes, filename="stats_card.png")
             await interaction.response.send_message(file=file)
 
-            Functions.Log(0, f"[{member.name}] used stats command")
+            Functions.Log(0, f"[{ctx.author.name}] used stats command")
 
         except Exception as e:
             Functions.Log(2, f"Error in stats command: {e}")
@@ -452,12 +410,14 @@ class Economy(commands.Cog):
                         bankmember += fine
 
                     await interaction.response.send_message(f"{robber.mention} just got caught trying to pickpocket {member.mention} and got fined for {fine} <:gdb_emoji_coin:1376156520030404650>.")
+                    
+                    await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (moneyrobber, bankrobber, robber.id, ctx.guild.id))
+                    await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (moneymember, bankmember, member.id, ctx.guild.id))
+
+                    Functions.Log(0, f"[{robber.name}] used pickpocket on {member.name}")
+
             else:
                 await interaction.response.send_message("This user doesn't have enough money in their pocket. \n(500 <:gdb_emoji_coin:1376156520030404650> required)", ephemeral=True)
-
-            await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (moneyrobber, bankrobber, robber.id, ctx.guild.id))
-            await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (moneymember, bankmember, member.id, ctx.guild.id))
-            Functions.Log(0, "Pickpocket command used")
     
     @pickpocket.error
     async def on_pickpocket_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
@@ -473,82 +433,49 @@ class Economy(commands.Cog):
         if member == ctx.author:
             await interaction.response.send_message("You can't rob yourself.", ephemeral=True)
         else:
-            async with self.bot.db.cursor() as cursor:
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (robber.id, ctx.guild.id))
-                moneyrobber = await cursor.fetchone()
-                await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (robber.id, ctx.guild.id))
-                bankrobber = await cursor.fetchone()
+            robberdata = await self.bot.db.get_user(robber.id, ctx.guild.id)
+            memberdata = await self.bot.db.get_user(member.id, ctx.guild.id)
 
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                moneymember = await cursor.fetchone()
-                await cursor.execute("SELECT bank FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                bankmember = await cursor.fetchone()
+            bankrobber = robberdata['bank']
+            skill_heistchance_lvl = robberdata['skill_heistchance_lvl']
 
-                await cursor.execute("SELECT skill_heistchance_lvl FROM levels WHERE user = ? AND guild = ?", (robber.id, ctx.guild.id))
-                skill_heistchance_lvl = await cursor.fetchone()
+            bankmember = memberdata['bank']
 
-                if not moneyrobber:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, robber.id, ctx.guild.id, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
-                
-                if not moneymember:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
+            if bankmember >= 25000:
+                baseChance = 10 # 10% chance
+                baseChance += skill_heistchance_lvl * 1
+                chance = random.randint(1, 100)
+                if chance <= baseChance: # successful heist
+                    take = bankmember * random.uniform(0.8, 1.0)
+                    take = int(round(take, 0))
 
-                try:
-                    moneyrobber = moneyrobber[0]
-                    moneymember = moneymember[0]
+                    bankrobber += take
+                    bankmember -= take
 
-                    bankrobber = bankrobber[0]
-                    bankmember = bankmember[0]
+                    await interaction.response.send_message(f"{robber.mention} stole {take} <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
 
-                    skill_heistchance_lvl = skill_heistchance_lvl[0]
-                except TypeError:
-                    moneyrobber = 0
-                    moneymember = 0
+                else: # failed heist
+                    fine = bankmember * random.uniform(0.75, 0.90)
+                    fine = int(round(fine, 0))
 
-                    bankrobber = 0
-                    bankmember = 0
+                    if bankrobber < fine:
+                        fine = int(round(fine / 2, 0))
 
-                    skill_heistchance_lvl = 0
-                
-                if bankmember >= 1000:
-                    baseChance = 10 # 10% chance
-                    baseChance += skill_heistchance_lvl * 1
-                    chance = random.randint(1, 100)
-                    if chance <= baseChance: # successful heist
-                        take = bankmember * random.uniform(0.8, 1.0)
-                        take = int(round(take, 0))
+                        bankrobber -= fine
+                        bankmember += fine
+                    else:
+                        bankrobber -= fine
+                        bankmember += fine
 
-                        bankrobber += take
-                        bankmember -= take
+                    await interaction.response.send_message(f"{robber.mention} just got caught trying to rob {member.mention} and got fined for {fine} <:gdb_emoji_coin:1376156520030404650>.")
 
-                        await interaction.response.send_message(f"{robber.mention} stole {take} <:gdb_emoji_coin:1376156520030404650> from {member.mention}!")
+                await self.bot.db.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankrobber, robber.id, ctx.guild.id))
+                await self.bot.db.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankmember, member.id, ctx.guild.id))
 
-                    else: # failed heist
-                        fine = bankmember * random.uniform(0.75, 0.90)
-                        fine = int(round(fine, 0))
+                Functions.Log(0, f"[{robber.name}] used heist on {member.name}")
 
-                        if bankrobber < fine:
-                            fine = int(round(fine / 2, 0))
-
-                            bankrobber -= fine
-                            bankmember += fine
-                        else:
-                            bankrobber -= fine
-                            bankmember += fine
-
-                        await interaction.response.send_message(f"{robber.mention} just got caught trying to rob {member.mention} and got fined for {fine} <:gdb_emoji_coin:1376156520030404650>.")
-
-                else:
-                    await interaction.response.send_message("This user doesn't have enough money in their bank. \n(1000 <:gdb_emoji_coin:1376156520030404650> required)", ephemeral=True)
-
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneyrobber, robber.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankrobber, robber.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET bank = ? WHERE user = ? AND guild = ?", (bankmember, member.id, ctx.guild.id))
-            await self.bot.db.commit()
-            Functions.Log(0, "Heist command used")
+            else:
+                await interaction.response.send_message("This user doesn't have enough money in their bank. \n(25000 <:gdb_emoji_coin:1376156520030404650> required)", ephemeral=True)
 
     @heist.error
     async def on_heist_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
@@ -561,27 +488,17 @@ class Economy(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
 
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
+        userdata = await self.bot.db.get_user(member.id, ctx.guild.id)
 
-            if not money:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
+        money = userdata['money']    
 
-            try:
-                money = money[0]
-            except TypeError:
-                money = 0
+        paycheck = random.randint(300, 900)
+        money += paycheck
 
-            paycheck = random.randint(300, 900)
-            money += paycheck
+        await interaction.response.send_message(f"{member.mention} went to work and has gained {paycheck} <:gdb_emoji_coin:1376156520030404650>.")
 
-            await interaction.response.send_message(f"{member.mention} went to work and has gained {paycheck} <:gdb_emoji_coin:1376156520030404650>.")
-
-            await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-        await self.bot.db.commit()
-        Functions.Log(0, "Work command used")
+        await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
+        Functions.Log(0, f"[{member.name}] used Work command")
 
     @work.error
     async def on_work_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
@@ -594,27 +511,17 @@ class Economy(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
 
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
+        userdata = await self.bot.db.get_user(member.id, ctx.guild.id)
 
-            if not money:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
+        money = userdata['money']
 
-            try:
-                money = money[0]
-            except TypeError:
-                money = 0
+        dailyreward = round(random.randint(1500, 2500), -2)
+        money += dailyreward
 
-            dailyreward = round(random.randint(1500, 2500), -2)
-            money += dailyreward
+        await interaction.response.send_message(f"{member.mention} has gained {dailyreward} <:gdb_emoji_coin:1376156520030404650> from their daily reward.")
 
-            await interaction.response.send_message(f"{member.mention} has gained {dailyreward} <:gdb_emoji_coin:1376156520030404650> from their daily reward.")
-
-            await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-        await self.bot.db.commit()
-        Functions.Log(0, "Daily command used")
+        await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
+        Functions.Log(0, f"[{member.name}] used Daily command")
 
     @daily.error
     async def on_daily_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
@@ -622,326 +529,246 @@ class Economy(commands.Cog):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
 
     @app_commands.command(name="sendmoney", description="Give a user a certain amount of money.")
-    async def sendmoney(self, interaction: discord.Interaction, member: discord.Member, amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
+    @app_commands.describe(amount="How much money to send (positive number or 'all')")
+    async def sendmoney(self, interaction: discord.Interaction, member: discord.Member, amount: str):
         ctx = await self.bot.get_context(interaction)
         sender = ctx.author
 
         if member == sender:
             await interaction.response.send_message(f"You can't send {amount} money to yourself.", ephemeral=True)
         else:
-            async with self.bot.db.cursor() as cursor:
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (sender.id, ctx.guild.id))
-                moneysender = await cursor.fetchone()
-                await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-                moneymember = await cursor.fetchone()
+            senderdata = await self.bot.db.get_user(sender.id, ctx.guild.id)
+            memberdata = await self.bot.db.get_user(member.id, ctx.guild.id)
 
-                if not moneysender:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)", (0, 0, 0, 0, sender.id, ctx.guild.id, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
+            moneysender = senderdata['money']
+            moneymember = memberdata['money']
 
-                if not moneymember:
-                    await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                    await self.bot.commit()
-
-                try:
-                    moneysender = moneysender[0]
-                    moneymember = moneymember[0]
-                except TypeError:
-                    moneysender = 0
-                    moneymember = 0
-
+            if amount.lower() == 'all':
+                amount = moneysender
+            else:
                 try:
                     amount = int(amount)
-                except:
-                    amount = moneysender
+                except ValueError:
+                    await interaction.response.send_message("The amount must be a positive number or 'all'.", ephemeral=True)
+                    return
 
-                if amount <= 0:
-                    await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
+            if amount <= 0:
+                await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
+            else:
+                if moneysender < amount:
+                    await interaction.response.send_message(f"You can't send {amount} <:gdb_emoji_coin:1376156520030404650> because you don't have enough.", ephemeral=True)
                 else:
-                    if moneysender < amount:
-                        await interaction.response.send_message(f"You can't send {amount} <:gdb_emoji_coin:1376156520030404650> because you don't have enough.", ephemeral=True)
-                    else:
-                        moneysender -= amount
-                        moneymember += amount
+                    moneysender -= amount
+                    moneymember += amount
 
-                        await interaction.response.send_message(f"{sender.mention} sent {amount} <:gdb_emoji_coin:1376156520030404650> to {member.mention}.")
+                    await interaction.response.send_message(f"{sender.mention} sent {amount} <:gdb_emoji_coin:1376156520030404650> to {member.mention}.")
 
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneysender, sender.id, ctx.guild.id))
-                await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
-        await self.bot.db.commit()
-        Functions.Log(0, "Send money command used")
-    
+                    await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneysender, sender.id, ctx.guild.id))
+                    await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (moneymember, member.id, ctx.guild.id))
+
+                    Functions.Log(0, f"[{sender.name}] sent {amount} to {member.name}")
+
+
     @app_commands.command(name="bet", description="Bet on a number ranging from 1 to 3.")
     async def bet(self, interaction: discord.Interaction, amount: int, bet: int):
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
 
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT money FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            money = await cursor.fetchone()
+        userdata = await self.bot.db.get_user(member.id, ctx.guild.id)
 
-            if not money:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl, skill_banksecurity_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0, 0))
-                await self.bot.commit()
+        money = userdata['money']
 
-            try:
-                money = money[0]
-            except TypeError:
-                money = 0
-
-            if amount > money:
-                await interaction.response.send_message(f"You can't bet {amount} <:gdb_emoji_coin:1376156520030404650> because you dont have enough.", ephemeral=True)
+        if amount > money:
+            await interaction.response.send_message(f"You can't bet {amount} <:gdb_emoji_coin:1376156520030404650> because you dont have enough.", ephemeral=True)
+        else:
+            rng = random.randint(1, 3)
+            if bet == rng:
+                money += amount
+                await interaction.response.send_message(f"{member.mention} bet {amount} <:gdb_emoji_coin:1376156520030404650> on {bet} and won.")
             else:
-                rng = random.randint(1, 3)
-                if bet == rng:
-                    money += amount
-                    await interaction.response.send_message(f"{member.mention} bet {amount} <:gdb_emoji_coin:1376156520030404650> on {bet} and won.")
-                else:
-                    money -= amount
-                    await interaction.response.send_message(f"{member.mention} bet {amount} <:gdb_emoji_coin:1376156520030404650> on {bet} and lost. The number was {rng}")
+                money -= amount
+                await interaction.response.send_message(f"{member.mention} bet {amount} <:gdb_emoji_coin:1376156520030404650> on {bet} and lost. The number was {rng}")
 
-            await cursor.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-        await self.bot.db.commit()
-        Functions.Log(0, "Bet command used")
+            await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
+
+            Functions.Log(0, f"[{member.name}] used Bet command")
 
     @app_commands.command(name="skills", description="Shows your skilltree.")
     async def skills(self, interaction: discord.Interaction):
-        # Loads the stats needed
         ctx = await self.bot.get_context(interaction)
         member = ctx.author
-        
-        async with self.bot.db.cursor() as cursor:
-            await cursor.execute("SELECT xp FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            xp = await cursor.fetchone()
-            await cursor.execute("SELECT level FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            level = await cursor.fetchone()
-            await cursor.execute("SELECT skillpoints FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skillpoints = await cursor.fetchone()
-            await cursor.execute("SELECT skill_robfull_lvl FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skill_robfull_lvl = await cursor.fetchone()
-            await cursor.execute("SELECT skill_robchance_lvl FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skill_robchance_lvl = await cursor.fetchone()
-            await cursor.execute("SELECT skill_heistchance_lvl FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skill_heistchance_lvl = await cursor.fetchone()
-            await cursor.execute("SELECT skill_heistchance_lvl FROM levels WHERE user = ? AND guild = ?", (member.id, ctx.guild.id))
-            skill_banksecurity_lvl = await cursor.fetchone()
+        guild = ctx.guild
 
-            if not xp or not level:
-                await cursor.execute("INSERT INTO levels (level, xp, money, bank, user, guild, nword, skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, member.id, ctx.guild.id, 0, 0, 0, 0, 0))
-                await self.bot.db.commit()
+        row = await self.bot.db.get_user(member.id, guild.id)
 
-            try:
-                skillpoints = skillpoints[0]
-                skill_robfull_lvl = skill_robfull_lvl[0]
-                skill_robchance_lvl = skill_robchance_lvl[0]
-                skill_heistchance_lvl = skill_heistchance_lvl[0]
-                skill_banksecurity_lvl = skill_banksecurity_lvl[0]
-            except TypeError:
-                skill_banksecurity_lvl = 0
-                skillpoints = 0
-                skill_robfull_lvl = 0
-                skill_robchance_lvl = 0
-                skill_heistchance_lvl = 0
+        skillpoints = row["skillpoints"]
+        skill_robfull_lvl = row["skill_robfull_lvl"]
+        skill_robchance_lvl = row["skill_robchance_lvl"]
+        skill_heistchance_lvl = row["skill_heistchance_lvl"]
+        skill_banksecurity_lvl = row["skill_banksecurity_lvl"]
 
-            levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
-            levelSecurity = skill_banksecurity_lvl
+        MAX_LVL = 5
 
-            # Discord embeds that shows the skill tree
-            embedMain = discord.Embed(
-                title="Skill Category Tree",
-                description=f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`\n**S**ecurity : `{levelSecurity}`",
-                color=discord.Color.blurple()
-            )
-            embedRobbing = discord.Embed(
-                title="Robbing Category Tree",
-                description=f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`",
-                color=discord.Color.red()
-            )
-            embedSecurity = discord.Embed(
-                title="Security Category Tree",
-                description=f"Skillpoints : `{skillpoints}`\nLevel : `{levelSecurity}` \n\n",
-                color=discord.Color.green()
+        def robbing_level():
+            return skill_robfull_lvl + skill_robchance_lvl + skill_heistchance_lvl
+
+        def upgrade_cost(lvl: int):
+            return None if lvl >= MAX_LVL else lvl + 1
+
+        def cost_text(lvl: int):
+            cost = upgrade_cost(lvl)
+            return "MAX" if cost is None else f"Cost `{cost}`"
+
+        def refresh_embeds():
+            embedMain.description = (
+                f"Skillpoints : `{skillpoints}`\n\n"
+                f"**R**obbing : `{robbing_level()}`\n"
+                f"**S**ecurity : `{skill_banksecurity_lvl}`"
             )
 
+            embedRobbing.description = (
+                f"Skillpoints : `{skillpoints}`\n"
+                f"Level : `{robbing_level()}`\n\n"
+                f"1. Full Rob Chance LVL : `{skill_robfull_lvl}` ({cost_text(skill_robfull_lvl)})\n"
+                f"2. Rob Chance LVL : `{skill_robchance_lvl}` ({cost_text(skill_robchance_lvl)})\n"
+                f"3. Heist Chance LVL : `{skill_heistchance_lvl}` ({cost_text(skill_heistchance_lvl)})"
+            )
 
-            # Make a view for the buttons
-            viewMain = discord.ui.View(timeout=None)
-            viewRobbing = discord.ui.View(timeout=None)
-            viewSecurity = discord.ui.View(timeout=None)
+            embedSecurity.description = (
+                f"Skillpoints : `{skillpoints}`\n"
+                f"Level : `{skill_banksecurity_lvl}`\n\n"
+                f"1. Bank Security LVL : `{skill_banksecurity_lvl}` ({cost_text(skill_banksecurity_lvl)})"
+            )
 
+        embedMain = discord.Embed(title="Skill Category Tree", color=discord.Color.blurple())
+        embedRobbing = discord.Embed(title="Robbing Skill Tree", color=discord.Color.red())
+        embedSecurity = discord.Embed(title="Security Skill Tree", color=discord.Color.green())
+        refresh_embeds()
 
-            # Robbing button skilltree
-            button_robbing = discord.ui.Button(style=discord.ButtonStyle.red, label="R")
-            button_security = discord.ui.Button(style=discord.ButtonStyle.green, label="S")
+        viewMain = discord.ui.View(timeout=None)
+        viewRobbing = discord.ui.View(timeout=None)
+        viewSecurity = discord.ui.View(timeout=None)
 
-            button_robbing1 = discord.ui.Button(style=discord.ButtonStyle.red, label="1")
-            button_robbing2 = discord.ui.Button(style=discord.ButtonStyle.red, label="2")
-            button_robbing3 = discord.ui.Button(style=discord.ButtonStyle.red, label="3")
+        btn_robbing = discord.ui.Button(label="R", style=discord.ButtonStyle.red)
+        btn_security = discord.ui.Button(label="S", style=discord.ButtonStyle.green)
+        btn_back = discord.ui.Button(label="Back", style=discord.ButtonStyle.gray)
 
-            button_security1 = discord.ui.Button(style=discord.ButtonStyle.green, label="1")
-            button_security2 = discord.ui.Button(style=discord.ButtonStyle.green, label="2")
-            button_security3 = discord.ui.Button(style=discord.ButtonStyle.green, label="3")
+        btn_r1 = discord.ui.Button(label="1", style=discord.ButtonStyle.red)
+        btn_r2 = discord.ui.Button(label="2", style=discord.ButtonStyle.red)
+        btn_r3 = discord.ui.Button(label="3", style=discord.ButtonStyle.red)
+        btn_s1 = discord.ui.Button(label="1", style=discord.ButtonStyle.green)
 
+        viewMain.add_item(btn_robbing)
+        viewMain.add_item(btn_security)
 
-            button_back = discord.ui.Button(style=discord.ButtonStyle.red, label="Back")
+        viewRobbing.add_item(btn_r1)
+        viewRobbing.add_item(btn_r2)
+        viewRobbing.add_item(btn_r3)
+        viewRobbing.add_item(btn_back)
 
+        viewSecurity.add_item(btn_s1)
+        viewSecurity.add_item(btn_back)
 
-            # Add the buttons to the view
-            viewMain.add_item(button_robbing)
-            viewMain.add_item(button_security)
+        async def go_robbing(i):
+            Functions.Log(0, f"[{member.name}] opened Robbing skill tree")
+            await i.response.edit_message(embed=embedRobbing, view=viewRobbing)
 
-            viewRobbing.add_item(button_robbing1)
-            viewRobbing.add_item(button_robbing2)
-            viewRobbing.add_item(button_robbing3)
-            viewRobbing.add_item(button_back)
+        async def go_security(i):
+            Functions.Log(0, f"[{member.name}] opened Security skill tree")
+            await i.response.edit_message(embed=embedSecurity, view=viewSecurity)
 
-            viewSecurity.add_item(button_security1)
-            viewSecurity.add_item(button_security2)
-            viewSecurity.add_item(button_security3)
-            viewSecurity.add_item(button_back)
+        async def go_back(i):
+            Functions.Log(0, f"[{member.name}] returned to main skill tree")
+            await i.response.edit_message(embed=embedMain, view=viewMain)
 
-            # Make the callbacks for the buttons
-            async def callback_robbing(interaction: discord.Interaction):
-                await interaction.response.send_message(embed=embedRobbing, view=viewRobbing, ephemeral=True)
-            button_robbing.callback = callback_robbing
+        btn_robbing.callback = go_robbing
+        btn_security.callback = go_security
+        btn_back.callback = go_back
 
-            async def callback_security(interaction: discord.Interaction):
-                await interaction.response.send_message(embed=embedSecurity, view=viewSecurity, ephemeral=True)
-            button_security.callback = callback_security
+        async def upgrade_robbing(stat: str, i):
+            nonlocal skillpoints, skill_robfull_lvl, skill_robchance_lvl, skill_heistchance_lvl
 
+            if stat == "full":
+                lvl = skill_robfull_lvl
+            elif stat == "chance":
+                lvl = skill_robchance_lvl
+            else:
+                lvl = skill_heistchance_lvl
 
-            # Make the callbacks for using the skillpoints
-            async def callback_robbing1(interaction: discord.Interaction):
-                nonlocal skillpoints, skill_robfull_lvl
+            if lvl >= MAX_LVL:
+                return await i.response.send_message("This skill is already maxed.", ephemeral=True)
 
-                if skillpoints > 0:
-                    if skill_robfull_lvl <= 5:
-                        skillpoints -= 1
-                        skill_robfull_lvl += 1
-                        
-                        # Update database
-                        async with self.bot.db.cursor() as cursor:
-                            await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, member.id, ctx.guild.id))
-                            await cursor.execute("UPDATE levels SET skill_robfull_lvl = ? WHERE user = ? AND guild = ?", (skill_robfull_lvl, member.id, ctx.guild.id))
-                            await self.bot.db.commit()
+            cost = upgrade_cost(lvl)
+            if skillpoints < cost:
+                return await i.response.send_message(
+                    f"You need `{cost}` skillpoints.", ephemeral=True
+                )
 
-                        # Refresh everything
-                        levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
-                        embedMain.description = f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`"
-                        embedRobbing.description = f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`"
-                        await interaction.response.edit_message(embed=embedRobbing, view=viewRobbing)
-                    else:
-                        await interaction.response.send_message(f"You already reached the maximum level for this stat.", ephemeral=True)
-                else:
-                    await interaction.response.send_message(f"You don't have enough Skillpoints.", ephemeral=True)
-            button_robbing1.callback = callback_robbing1
+            skillpoints -= cost
 
-            async def callback_robbing2(interaction: discord.Interaction):
-                nonlocal skillpoints, skill_robchance_lvl
+            if stat == "full":
+                skill_robfull_lvl += 1
+            elif stat == "chance":
+                skill_robchance_lvl += 1
+            else:
+                skill_heistchance_lvl += 1
 
-                if skillpoints > 0:
-                    if skill_robchance_lvl <= 5:
-                        skillpoints -= 1
-                        skill_robchance_lvl += 1
-                        
-                        # Update database
-                        async with self.bot.db.cursor() as cursor:
-                            await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, member.id, ctx.guild.id))
-                            await cursor.execute("UPDATE levels SET skill_robchance_lvl = ? WHERE user = ? AND guild = ?", (skill_robchance_lvl, member.id, ctx.guild.id))
-                            await self.bot.db.commit()
+            await self.bot.db.execute(
+                """
+                UPDATE levels
+                SET skillpoints = ?, skill_robfull_lvl = ?, skill_robchance_lvl = ?, skill_heistchance_lvl = ?
+                WHERE user = ? AND guild = ?
+                """,
+                (
+                    skillpoints,
+                    skill_robfull_lvl,
+                    skill_robchance_lvl,
+                    skill_heistchance_lvl,
+                    member.id,
+                    guild.id,
+                )
+            )
 
-                        # Refresh everything
-                        levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
-                        embedMain.description = f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`"
-                        embedRobbing.description = f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`"
-                        await interaction.response.edit_message(embed=embedRobbing, view=viewRobbing)
-                    else:
-                        await interaction.response.send_message(f"You already reached the maximum level for this stat.", ephemeral=True)
-                else:
-                    await interaction.response.send_message(f"You don't have enough Skillpoints.", ephemeral=True)
-            button_robbing2.callback = callback_robbing2
-            
-            async def callback_robbing3(interaction: discord.Interaction):
-                nonlocal skillpoints, skill_heistchance_lvl
+            refresh_embeds()
+            Functions.Log(0, f"[{member.name}] upgraded robbing skill ({stat}) | cost {cost}")
+            await i.response.edit_message(embed=embedRobbing, view=viewRobbing)
 
-                if skillpoints > 0:
-                    if skill_heistchance_lvl <= 5:
-                        skillpoints -= 1
-                        skill_heistchance_lvl += 1
-                        
-                        # Update database
-                        async with self.bot.db.cursor() as cursor:
-                            await cursor.execute("UPDATE levels SET skillpoints = ? WHERE user = ? AND guild = ?", (skillpoints, member.id, ctx.guild.id))
-                            await cursor.execute("UPDATE levels SET skill_heistchance_lvl = ? WHERE user = ? AND guild = ?", (skill_heistchance_lvl, member.id, ctx.guild.id))
-                            await self.bot.db.commit()
+        async def upgrade_security(i):
+            nonlocal skillpoints, skill_banksecurity_lvl
 
-                        # Refresh everything
-                        levelRobbing = skill_heistchance_lvl + skill_robchance_lvl + skill_robfull_lvl
-                        embedMain.description = f"Skillpoints : `{skillpoints}`\n\n**R**obbing : `{levelRobbing}`"
-                        embedRobbing.description = f"Skillpoints : `{skillpoints}`\nLevel : `{levelRobbing}` \n\n1.Full Rob Chance LVL : `{skill_robfull_lvl}`\n2.Rob Chance LVL : `{skill_robchance_lvl}`\n3.Heist Chance LVL : `{skill_heistchance_lvl}`"
-                        await interaction.response.edit_message(embed=embedRobbing, view=viewRobbing)
-                    else:
-                        await interaction.response.send_message(f"You already reached the maximum level for this stat.", ephemeral=True)
-                else:
-                    await interaction.response.send_message(f"You don't have enough Skillpoints.", ephemeral=True)
-            button_robbing3.callback = callback_robbing3
+            if skill_banksecurity_lvl >= MAX_LVL:
+                return await i.response.send_message("This skill is already maxed.", ephemeral=True)
 
+            cost = upgrade_cost(skill_banksecurity_lvl)
+            if skillpoints < cost:
+                return await i.response.send_message(
+                    f"You need `{cost}` skillpoints.", ephemeral=True
+                )
 
-            # Button for going back
-            async def callback_back(interaction: discord.Interaction):
-                await interaction.response.send_message(embed=embedMain, view=viewMain, ephemeral=True)
-            button_back.callback = callback_back
+            skillpoints -= cost
+            skill_banksecurity_lvl += 1
 
+            await self.bot.db.execute(
+                """
+                UPDATE levels
+                SET skillpoints = ?, skill_banksecurity_lvl = ?
+                WHERE user = ? AND guild = ?
+                """,
+                (skillpoints, skill_banksecurity_lvl, member.id, guild.id)
+            )
+
+            refresh_embeds()
+            Functions.Log(0, f"[{member.name}] upgraded Bank Security | cost {cost}")
+            await i.response.edit_message(embed=embedSecurity, view=viewSecurity)
+
+        btn_r1.callback = lambda i: upgrade_robbing("full", i)
+        btn_r2.callback = lambda i: upgrade_robbing("chance", i)
+        btn_r3.callback = lambda i: upgrade_robbing("heist", i)
+        btn_s1.callback = upgrade_security
+
+        Functions.Log(0, f"[{member.name}] opened Skills menu")
         await interaction.response.send_message(embed=embedMain, view=viewMain, ephemeral=True)
-        Functions.Log(0, "Skills command used")
 
-    @app_commands.command(name="addcolumn")
-    async def add_column(self, interaction: discord.Interaction, column_name: str):
-        if interaction.user.guild_permissions.administrator:
-            async with self.bot.db.cursor() as cursor:
-                # Check if the column already exists
-                await cursor.execute("PRAGMA table_info(levels)")
-                columns = await cursor.fetchall()
-                column_names = [column[1] for column in columns]
 
-                if column_name in column_names:
-                    await interaction.response.send_message(f"Column `{column_name}` already exists in the `levels` table.", ephemeral=True)
-                else:
-                    await cursor.execute(f"ALTER TABLE levels ADD COLUMN {column_name} INTEGER DEFAULT 0")
-                    await self.bot.db.commit()
-                    await interaction.response.send_message(f"Column `{column_name}` has been added to the `levels` table.", ephemeral=True)
-                    Functions.Log(0, f"Column `{column_name}` added to levels table.")
-        else:
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
-
-    @app_commands.command(name="delcolumn")
-    async def delete_column(self, interaction: discord.Interaction, column_name: str):
-        if interaction.user.guild_permissions.administrator:
-            async with self.bot.db.cursor() as cursor:
-                # Check if the column exists
-                await cursor.execute("PRAGMA table_info(levels)")
-                columns = await cursor.fetchall()
-                column_names = [column[1] for column in columns]
-
-                if column_name not in column_names:
-                    await interaction.response.send_message(f"Column `{column_name}` does not exist in the `levels` table.", ephemeral=True)
-                    return
-
-                # SQLite does not support dropping columns directly, so we need to recreate the table
-                remaining_columns = [col for col in column_names if col != column_name]
-                columns_str = ", ".join(remaining_columns)
-
-                await cursor.execute("BEGIN TRANSACTION")
-                await cursor.execute(f"CREATE TABLE levels_new AS SELECT {columns_str} FROM levels")
-                await cursor.execute("DROP TABLE levels")
-                await cursor.execute("ALTER TABLE levels_new RENAME TO levels")
-                await self.bot.db.commit()
-
-                await interaction.response.send_message(f"Column `{column_name}` has been deleted from the `levels` table.", ephemeral=True)
-                Functions.Log(0, f"Column `{column_name}` removed from levels table.")
-                await self.f.give_xp(interaction.user,  interaction.guild)
-        else:
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
-        
 async def setup(bot):
     await bot.add_cog(Economy(bot))

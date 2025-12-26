@@ -66,7 +66,7 @@ class Console(commands.Cog):
             await interaction.response.send_message(f"Error executing query: {e}", ephemeral=True)
             Functions.Log(2, f"SQL error by {interaction.user.name}: {e}")
 
-    @app_commands.command(name="userlookup", description="Execute SQL query. (admin command)")
+    @app_commands.command(name="userlookup", description="Look up a username by ID. (admin command)")
     async def userlookup(self, interaction: discord.Interaction, id: str):
         try:
             id = int(id)
