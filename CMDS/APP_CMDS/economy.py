@@ -23,7 +23,7 @@ class Economy(commands.Cog):
         self.bot = bot
 
         # Start the voice call XP giver
-        self.f = Functions(bot)
+        self.f = self.bot.get_cog("Functions")
 
         # Ensure database is initialized
         if not hasattr(bot, "db"):

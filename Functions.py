@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 
-import requests, random, asyncio
+import requests, random
 from pathlib import Path
 
 from lists import logTypes
@@ -20,14 +20,11 @@ class Functions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        # Get the ranks cog instance
+        self.ranks_cog = self.bot.get_cog("Ranks")
+
         # Start XP task
         self.update_xp.start()
-
-        # Ensure database is initialized
-        if not hasattr(bot, "db"):
-            from database import Database  # Import your Database class
-            bot.db = Database(Path(BOTDATA_FILE_PATH) / "stats.db")
-            self.bot.loop.create_task(bot.db.connect())
 
     # ---------------------------
     # Logging
@@ -116,26 +113,12 @@ class Functions(commands.Cog):
     # ---------------------------
     async def give_xp(self, member, guild, variant):
 
-        # Ensure user exists
-        await self.bot.db.execute(
-            """
-            INSERT INTO levels (user, guild)
-            VALUES (?, ?)
-            ON CONFLICT(user, guild) DO NOTHING
-            """,
-            (member.id, guild.id)
-        )
+        # Fetch current stats
+        userdata = await self.bot.db.get_user(member.id, guild.id)
 
-        # Fetch stats
-        result = await self.bot.db.fetchone(
-            "SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?",
-            (member.id, guild.id)
-        )
-
-        if result:
-            xp, level, money, bank, nword, skillpoints = result
-        else:
-            xp = level = money = bank = nword = skillpoints = 0
+        level = userdata["level"]
+        xp = userdata["xp"]
+        money = userdata["money"]
 
         # Add XP / Money based on variant
         if variant == 0:
@@ -165,27 +148,13 @@ class Functions(commands.Cog):
     async def levelup(self, member, guild):
         alerts_channel = self.bot.get_channel(1384275554718711858)
 
-        # Ensure user exists
-        await self.bot.db.execute(
-            """
-            INSERT INTO levels (user, guild)
-            VALUES (?, ?)
-            ON CONFLICT(user, guild) DO NOTHING
-            """,
-            (member.id, guild.id)
-        )
-
-        # Fetch stats
-        result = await self.bot.db.fetchone(
-            "SELECT xp, level, money, bank, nword, skillpoints FROM levels WHERE user = ? AND guild = ?",
-            (member.id, guild.id)
-        )
-
-        if result:
-            xp, level, money, bank, nword, skillpoints = result
-        else:
-            xp = level = money = bank = nword = skillpoints = 0
+        # Fetch current stats
+        userdata = await self.bot.db.get_user(member.id, guild.id)
         
+        level = userdata["level"]
+        xp = userdata["xp"]
+        skillpoints = userdata["skillpoints"]
+
         # Level up
         level += 1
         xp = 0
@@ -203,6 +172,8 @@ class Functions(commands.Cog):
             (level, xp, skillpoints, member.id, guild.id)
         )
 
+        # Check for rankup
+        await self.ranks_cog.rankup(member, guild)
 # ---------------------------
 # Setup
 # ---------------------------

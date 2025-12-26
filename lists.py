@@ -38,3 +38,14 @@ cog_list = [
     'voice'
 ]
 
+rank_roles = {
+    5: 1065622522390908948, # Good Pigeon
+    10: 1065623070271864863, # Pro Pigeon
+    15: 1065624978323681341, # Insane Pigeon
+    20: 1065625410559295518, # Ultra Pigeon
+    30: 1072936830745448498, # Veteran Pigeon
+    40: 1072938262861201409, # Distinguished Pigeon
+    50: 1065625836948037692, # God Pigeon
+    69: 1065625980586164224, # MLG Pigeon
+    100: 1065627903292887080 # Religion SEED
+}

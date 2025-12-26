@@ -40,6 +40,7 @@ class MyBot(commands.Bot):
         # LOAD EXTENSIONS
         # -------------------------
         extensions = [
+            "CMDS.APP_CMDS.ranks",
             "Functions",
             "CMDS.APP_CMDS.economy",
             "CMDS.APP_CMDS.uncathegorized",
