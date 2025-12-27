@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from Functions import *
-from lists import *
+from Extensions.functions import *
+from BotVariables.lists import *
 
 class Console(commands.Cog):
     def __init__(self, bot):

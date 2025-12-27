@@ -6,8 +6,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from colorama import Fore as f
 
-from version import botVersion
-from database import Database
+from BotVariables.version import botVersion
+from Extensions.database import Database
 
 # -------------------------
 # ENV SETUP
@@ -40,13 +40,14 @@ class MyBot(commands.Bot):
         # LOAD EXTENSIONS
         # -------------------------
         extensions = [
-            "CMDS.APP_CMDS.ranks",
-            "Functions",
-            "CMDS.APP_CMDS.economy",
-            "CMDS.APP_CMDS.uncathegorized",
-            "CMDS.APP_CMDS.voice",
-            "CMDS.APP_CMDS.console",
-            "CMDS.cmds",
+            "Extensions.ranks",
+            "Extensions.functions",
+            "Extensions.economy",
+            "Extensions.uncathegorized",
+            "Extensions.voice",
+            "Extensions.console",
+            "Extensions.chatcommands",
+            "Extensions.leaderboards",
         ]
 
         for ext in extensions:

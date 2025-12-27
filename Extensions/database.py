@@ -3,7 +3,8 @@ from pathlib import Path
 import asyncio
 import shutil
 
-from Functions import Functions
+from Extensions.functions import *
+from BotVariables.lists import *
 
 class Database:
     def __init__(self, path: Path, backup_interval: int = Functions.hoursToSeconds(3), max_backups: int = 10):
