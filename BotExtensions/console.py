@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from Extensions.functions import *
+from BotExtensions.functions import *
 from BotVariables.lists import *
 
 class Console(commands.Cog):

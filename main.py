@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from colorama import Fore as f
 
 from BotVariables.version import botVersion
-from Extensions.database import Database
+from BotExtensions.database import Database
 
 # -------------------------
 # ENV SETUP
@@ -40,14 +40,14 @@ class MyBot(commands.Bot):
         # LOAD EXTENSIONS
         # -------------------------
         extensions = [
-            "Extensions.ranks",
-            "Extensions.functions",
-            "Extensions.economy",
-            "Extensions.uncathegorized",
-            "Extensions.voice",
-            "Extensions.console",
-            "Extensions.chatcommands",
-            "Extensions.leaderboards",
+            "BotExtensions.ranks",
+            "BotExtensions.functions",
+            "BotExtensions.economy",
+            "BotExtensions.uncathegorized",
+            "BotExtensions.voice",
+            "BotExtensions.console",
+            "BotExtensions.chatcommands",
+            "BotExtensions.leaderboards",
         ]
 
         for ext in extensions:

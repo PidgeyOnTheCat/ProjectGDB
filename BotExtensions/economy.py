@@ -10,7 +10,7 @@ from easy_pil import *
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from pathlib import Path
 
-from Extensions.functions import *
+from BotExtensions.functions import *
 from BotVariables.lists import *
 
 # Load the environment variables
@@ -52,15 +52,34 @@ class Economy(commands.Cog):
         # -------------------------
         # N-WORD FILTER
         # -------------------------
-        for word in nword_list:
-            if word in message.content.lower():
-                nword += 1
-                await self.bot.db.execute(
-                    "UPDATE levels SET nword = ? WHERE user = ? AND guild = ?",
-                    (nword, author.id, guild.id)
-                )
-                await message.channel.send(":thumbsdown:  \nNo racism!")
-                Functions.Log(0, f"[{author.name}] has said the N-word.")
+        # Convert message content to lowercase
+        message_content = message.content.lower()
+
+        # Assuming nword_list is a list of words like ["nword", "otherbadword"]
+        nword_set = set(word.lower() for word in nword_list)
+
+        # Split message into words to avoid substring issues
+        words_in_message = message_content.split()
+        count = sum(word in nword_set for word in words_in_message)
+
+        if count > 0:
+            # Fetch current nword count from DB (or set to 0 if not found)
+            row = await self.bot.db.fetchone(
+                "SELECT nword FROM levels WHERE user = ? AND guild = ?",
+                (author.id, guild.id)
+            )
+            nword = row[0] if row else 0
+            nword += count
+
+            # Update DB
+            await self.bot.db.execute(
+                "UPDATE levels SET nword = ? WHERE user = ? AND guild = ?",
+                (nword, author.id, guild.id)
+            )
+
+            # Send warning and log
+            await message.channel.send(":thumbsdown: \nNo racism!")
+            Functions.Log(0, f"[{author.name}] said the N-word {count} time(s).")
 
         # -------------------------
         # One-in-a-million Easter Egg

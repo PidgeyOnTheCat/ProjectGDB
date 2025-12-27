@@ -10,7 +10,7 @@ from easy_pil import *
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from pathlib import Path
 
-from Extensions.functions import *
+from BotExtensions.functions import *
 from BotVariables.lists import *
 
 # Load the environment variables

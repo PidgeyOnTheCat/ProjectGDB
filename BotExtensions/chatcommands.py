@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Extensions.functions import *
+from BotExtensions.functions import *
 
 @commands.command()
 async def test(ctx):

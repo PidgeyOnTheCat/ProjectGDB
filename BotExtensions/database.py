@@ -3,7 +3,7 @@ from pathlib import Path
 import asyncio
 import shutil
 
-from Extensions.functions import *
+from BotExtensions.functions import *
 from BotVariables.lists import *
 
 class Database:
