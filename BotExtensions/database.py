@@ -98,6 +98,8 @@ class Database:
                 skill_heistchance_lvl INTEGER NOT NULL DEFAULT 0,
                 skill_banksecurity_lvl INTEGER NOT NULL DEFAULT 0,
 
+                cocksize DOUBLE NOT NULL DEFAULT 0,
+
                 PRIMARY KEY (user, guild)
             )
             """

@@ -67,21 +67,28 @@ class Console(commands.Cog):
             Functions.Log(2, f"SQL error by {interaction.user.name}: {e}")
 
     @app_commands.command(name="userlookup", description="Look up a username by ID. (admin command)")
-    async def userlookup(self, interaction: discord.Interaction, id: str):
-        try:
-            id = int(id)
-        except ValueError:
-            await interaction.response.send_message("Invalid user ID.", ephemeral=True)
-            return
+    async def userlookup(self, interaction: discord.Interaction, id: str = None, member: discord.Member = None):
+        if id != None:
+            try:
+                id = int(id)
+            except ValueError:
+                await interaction.response.send_message("Invalid user ID.", ephemeral=True)
+                return
 
-        try:
-            username = await self.bot.fetch_user(id)
-        except Exception as e:
-            await interaction.response.send_message(f"Error fetching user: {e}", ephemeral=True)
-            return
-        
-        await interaction.response.send_message(f"Username of userid: **{id}** is **{username}**", ephemeral=True)
-        Functions.Log(0, f"[{interaction.user.name}] used userlookup {id}")
+            try:
+                username = await self.bot.fetch_user(id)
+            except Exception as e:
+                await interaction.response.send_message(f"Error fetching user: {e}", ephemeral=True)
+                return
+            
+            await interaction.response.send_message(f"Username of userid: **{id}** is **{username}**", ephemeral=True)
+            Functions.Log(0, f"[{interaction.user.name}] used userlookup {id}")
+
+        elif member != None:
+            await interaction.response.send_message(f"user id : **{member.id}** \nguild id : **{interaction.guild.id}**", ephemeral=True)
+
+        else:
+            await interaction.response.send_message("No id or user given", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Console(bot))
