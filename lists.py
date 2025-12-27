@@ -22,6 +22,7 @@ roasts = [
 
 nword_list = [
     'nigger',
+    'niger',
     'nigga',
     'neger',
     'necher',
