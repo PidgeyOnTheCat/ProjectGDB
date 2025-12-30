@@ -34,7 +34,7 @@ class Ranks(commands.Cog):
 
         await member.add_roles(role)
 
-        Functions.Log(0, f"[{member.name}] has been given the role {role.name}")
+        Functions.Log(0, member.name, f"has been given the role {role.name}")
 
 async def setup(bot):
     await bot.add_cog(Ranks(bot))

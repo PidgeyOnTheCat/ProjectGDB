@@ -128,4 +128,4 @@ class Database:
         backup_path = self.path.parent / f"{self.path.name}.bak1"
         shutil.copy2(self.path, backup_path)
 
-        Functions.Log(0, "Database backup created")
+        Functions.Log(0, None, "Database backup created")

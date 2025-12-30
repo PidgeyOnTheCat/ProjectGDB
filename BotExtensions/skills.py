@@ -245,7 +245,7 @@ class Skills(commands.Cog):
         # ----------------------------
         file = discord.File(render_main().image_bytes, "skills.png")
         await interaction.followup.send(file=file, view=view_main, ephemeral=True)
-        Functions.Log(0, f"[{member.name}] used the Skills command")
+        Functions.Log(0, interaction.user.name, f"used the Skills command")
 
 
 async def setup(bot):

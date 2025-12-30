@@ -13,16 +13,17 @@ class Console(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+
     @app_commands.command(name="test", description="Test command")
     async def Test(self, interaction: discord.Interaction): 
         if not Functions.isOwner:
             raise NotOwnerError()
 
         await interaction.response.send_message("Test", ephemeral=True, delete_after=5) 
-        Functions.Log(0, "Test command used") 
-        Functions.Log(1, "Test command used") 
-        Functions.Log(2, "Test command used") 
-        Functions.Log(3, "Test command used") 
+        Functions.Log(0, interaction.user.name, "used Test command") 
+        Functions.Log(1, interaction.user.name, "used Test command") 
+        Functions.Log(2, interaction.user.name, "used Test command") 
+        Functions.Log(3, interaction.user.name, "used Test command") 
 
     @app_commands.command(name="reload", description="Reloads a cog while the bot is running. (admin command)")
     async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','uncathegorized','voice','functions','skills','ranks','leaderboards','errorhandler']):
@@ -31,7 +32,7 @@ class Console(commands.Cog):
     
         await self.bot.reload_extension(name=f"BotExtensions.{cog}")
         await interaction.response.send_message(f'{cog} cog reloaded', ephemeral=True)
-        Functions.Log(0, f"[{interaction.user.name}] reloaded {cog} cog")
+        Functions.Log(0, interaction.user.name, f"reloaded {cog} cog")
 
 
     @app_commands.command(name="shutdown", description="Shuts down the bot. (admin command)")
@@ -40,7 +41,7 @@ class Console(commands.Cog):
             raise NotAdminError()
         
         await interaction.response.send_message("Shutting down the bot", ephemeral=True)
-        Functions.Log(0, "Bot is shutting down")
+        Functions.Log(0, interaction.user.name, "Bot is shutting down")
         await self.bot.close()
         os._exit(0)
 
@@ -71,11 +72,11 @@ class Console(commands.Cog):
                 await self.bot.db.execute(query)
                 await interaction.response.send_message("Query executed successfully.", ephemeral=True)
 
-            Functions.Log(0, f"[{interaction.user.name}] used SQL Query: {query}")
+            Functions.Log(0, interaction.user.name, f"used SQL Query: {query}")
 
         except Exception as e:
             await interaction.response.send_message(f"Error executing query: {e}", ephemeral=True)
-            Functions.Log(2, f"SQL error by {interaction.user.name}: {e}")
+            Functions.Log(2, interaction.user.name, f"SQL error: {e}")
 
     @app_commands.command(name="userlookup", description="Look up a username by ID. (admin command)")
     async def userlookup(self, interaction: discord.Interaction, id: str = None, member: discord.Member = None):
@@ -96,7 +97,7 @@ class Console(commands.Cog):
                 return
             
             await interaction.response.send_message(f"Username of userid: **{id}** is **{username}**", ephemeral=True)
-            Functions.Log(0, f"[{interaction.user.name}] used userlookup {id}")
+            Functions.Log(0, interaction.user.name, f"used userlookup {id}")
 
         elif member != None:
             await interaction.response.send_message(f"user id : **{member.id}** \nguild id : **{interaction.guild.id}**", ephemeral=True)

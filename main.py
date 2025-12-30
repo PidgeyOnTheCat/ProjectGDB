@@ -6,8 +6,9 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from colorama import Fore as f
 
-from BotVariables.version import botVersion
 from BotExtensions.database import Database
+from BotExtensions.functions import Functions
+from BotVariables.version import botVersion
 
 
 # -------------------------
@@ -33,9 +34,11 @@ class MyBot(commands.Bot):
         # -------------------------
         db_path = Path(BOTDATA_FILE_PATH) / "stats.db"
         self.db = Database(db_path)
-        await self.db.connect()
-
-        print("[DB] Database connected")
+        try:
+            await self.db.connect()
+            print(f"{f.GREEN}[DB] Database connected{f.RESET}")
+        except Exception as e:
+            print(f"{f.RED}[DB] Database failed connect: {e}{f.RESET}")
 
         # -------------------------
         # LOAD EXTENSIONS
@@ -56,9 +59,9 @@ class MyBot(commands.Bot):
         for ext in extensions:
             try:
                 await self.load_extension(ext)
-                print(f"[EXT] Loaded {ext}")
+                print(f"{f.GREEN}[EXT] Loaded {ext}{f.RESET}")
             except Exception as e:
-                print(f"[EXT] Failed to load {ext}: {e}")
+                print(f"{f.RED}[EXT] Failed to load {ext}: {e}{f.RESET}")
 
     async def close(self):
         # Graceful shutdown
@@ -95,35 +98,10 @@ async def on_ready():
 
 
 # -------------------------
-# STARTUP BANNER
-# -------------------------
-async def startup_banner():
-    print(
-        rf"""
-            {f.RED}.----------------. {f.GREEN}.----------------. {f.BLUE}.----------------.
-            {f.RED}| .--------------. {f.GREEN}| .--------------. {f.BLUE}| .--------------. |
-            {f.RED}| |    ______    | {f.GREEN}| |  ________    | {f.BLUE}| |   ______     | |
-            {f.RED}| |  .' ___  |   | {f.GREEN}| | |_   ___ `.  | {f.BLUE}| |  |_   _ \    | |
-            {f.RED}| | / .'   \_|   | {f.GREEN}| |   | |   `. \ | {f.BLUE}| |    | |_) |   | |
-            {f.RED}| | | |    ____  | {f.GREEN}| |   | |    | | | {f.BLUE}| |    |  __'.   | |
-            {f.RED}| | \ `.___]  _| | {f.GREEN}| |  _| |___.' / | {f.BLUE}| |   _| |__) |  | |
-            {f.RED}| |  `._____.'   | {f.GREEN}| | |________.'  | {f.BLUE}| |  |_______/   | |
-            {f.RED}| |              | {f.GREEN}| |              | {f.BLUE}| |              | |
-            {f.RED}| '--------------' {f.GREEN}| '--------------' {f.BLUE}| '--------------' |
-            {f.RED}'----------------' {f.GREEN}'----------------' {f.BLUE}'----------------'
-
-            |  Made by: PidgeyCat | |  Version: {botVersion} | |  Discord: discord.gg/PBvj4AfUzr  |
-
-{f.RESET}
-"""
-    )
-
-
-# -------------------------
 # MAIN ENTRY POINT
 # -------------------------
 async def main():
-    await startup_banner()
+    await Functions.startup_banner()
     async with bot:
         await bot.start(TOKEN)
 

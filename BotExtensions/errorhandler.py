@@ -12,6 +12,9 @@ class ErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def cog_unload(self):
+        return await super().cog_unload()
+
     # test slash command
     @app_commands.command(name="error", description="Always throws an error")
     async def error_command(self, interaction: discord.Interaction):
@@ -40,11 +43,11 @@ async def setup(bot):
 
         # Special log type for our custom exception
         if isinstance(error, NotOwnerError):
-            Functions.Log(0, f"[{interaction.user.name}] used '{interaction.command.name}' command but doesnt have owner permission")
+            Functions.Log(0, interaction.user.name, f"used '{interaction.command.name}' command but doesnt have owner permission")
         elif isinstance(error, NotAdminError):
-            Functions.Log(0, f"[{interaction.user.name}] used '{interaction.command.name}' command but doesnt have admin permission")
+            Functions.Log(0, interaction.user.name, f"used '{interaction.command.name}' command but doesnt have admin permission")
         else:
-            Functions.Log(2, f"Error in '{interaction.command.name}': {error}")
+            Functions.Log(2, interaction.user.name, f"Error in '{interaction.command.name}': {error}")
 
         # Notify the user
         if not interaction.response.is_done():

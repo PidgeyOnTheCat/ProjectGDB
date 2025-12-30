@@ -4,12 +4,15 @@ from discord import app_commands
 
 import requests, random
 from pathlib import Path
+from colorama import Fore
 
 from datetime import datetime as dt
 from dotenv import load_dotenv
 import os
 
 from BotVariables.lists import *
+from BotVariables.version import botVersion
+
 
 # Load environment variables
 load_dotenv()
@@ -31,11 +34,44 @@ class Functions(commands.Cog):
     # Logging
     # ---------------------------
     @staticmethod
-    def Log(type, message):
-        try:
-            print(f"[{dt.now().strftime('%d.%m.%Y')}] [{dt.now().strftime('%H:%M:%S')}] [ {logTypes[type]} ] {message}")
-        except Exception as e:
-            print(f"Error logging message: {e}")
+    def Log(type, username, message):
+        logTypes = [
+            Fore.GREEN + " INFO  " + Fore.RESET,
+            Fore.YELLOW + "WARNING" + Fore.RESET,
+            Fore.RED + " ERROR " + Fore.RESET,
+            Fore.BLUE + " DEBUG " + Fore.RESET
+        ]
+        
+        if username != None:
+            print(f"[{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%d.%m.%Y')}{Fore.RESET}] [{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%H:%M:%S')}{Fore.RESET}] [ {logTypes[type]} ] [{Fore.LIGHTWHITE_EX}{username}{Fore.RESET}] {message}")
+        else:
+            print(f"[{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%d.%m.%Y')}{Fore.RESET}] [{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%H:%M:%S')}{Fore.RESET}] [ {logTypes[type]} ] {message}")
+
+
+    # -------------------------
+    # STARTUP BANNER
+    # -------------------------
+    @staticmethod
+    async def startup_banner():
+        print(
+            rf"""
+                {Fore.RED}.----------------. {Fore.GREEN}.----------------. {Fore.BLUE}.----------------.
+                {Fore.RED}| .--------------. {Fore.GREEN}| .--------------. {Fore.BLUE}| .--------------. |
+                {Fore.RED}| |    ______    | {Fore.GREEN}| |  ________    | {Fore.BLUE}| |   ______     | |
+                {Fore.RED}| |  .' ___  |   | {Fore.GREEN}| | |_   ___ `.  | {Fore.BLUE}| |  |_   _ \    | |
+                {Fore.RED}| | / .'   \_|   | {Fore.GREEN}| |   | |   `. \ | {Fore.BLUE}| |    | |_) |   | |
+                {Fore.RED}| | | |    ____  | {Fore.GREEN}| |   | |    | | | {Fore.BLUE}| |    |  __'.   | |
+                {Fore.RED}| | \ `.___]  _| | {Fore.GREEN}| |  _| |___.' / | {Fore.BLUE}| |   _| |__) |  | |
+                {Fore.RED}| |  `._____.'   | {Fore.GREEN}| | |________.'  | {Fore.BLUE}| |  |_______/   | |
+                {Fore.RED}| |              | {Fore.GREEN}| |              | {Fore.BLUE}| |              | |
+                {Fore.RED}| '--------------' {Fore.GREEN}| '--------------' {Fore.BLUE}| '--------------' |
+                {Fore.RED}'----------------' {Fore.GREEN}'----------------' {Fore.BLUE}'----------------'
+
+                |  Made by: PidgeyCat | |  Version: {botVersion} | |  Discord: discord.gg/PBvj4AfUzr  |
+
+    {Fore.RESET}
+    """
+        )
 
     # ---------------------------
     # API Utility Functions
@@ -122,18 +158,22 @@ class Functions(commands.Cog):
         money = userdata["money"]
 
         # Add XP / Money based on variant
-        if variant == 0:
+        if variant == 0: # normal text message
             xp += random.randint(15, 35)
             money += random.randint(20, 50)
-            self.Log(0, f"[{member.name}] got XP and money")
-        elif variant == 1:
+            self.Log(0, member.name, f"got XP and money from normal message")
+        elif variant == 1: # slash command
             xp += random.randint(25, 40)
             money += random.randint(30, 55)
-            self.Log(0, f"[{member.name}] got XP and money")
-        elif variant == 2:
+            self.Log(0, member.name, f"got XP and money from slash command")
+        elif variant == 2: # voice
             xp += random.randint(25, 50)
             money += random.randint(30, 65)
-            self.Log(0, f"[{member.name}] got XP and money in vc")
+            self.Log(0, member.name, f"got XP and money in vc")
+        elif variant == 3: # reaction
+            xp += random.randint(10, 30)
+            money += random.randint(15, 40)
+            self.Log(0, member.name, f"got XP and money from reaction")
 
         await self.bot.db.execute(
             "UPDATE levels SET xp = ?, money = ? WHERE user = ? AND guild = ?",
