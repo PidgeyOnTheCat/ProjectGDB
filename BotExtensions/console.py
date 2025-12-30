@@ -12,9 +12,9 @@ class Console(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="reload", description="Reloads a cog while the bot is running. (admin command)")
-    async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','test','uncathegorized','voice','functions']):
+    async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','uncathegorized','voice','functions','skills','ranks','leaderboards']):
         if interaction.user.guild_permissions.administrator:
-            await self.bot.reload_extension(name=f"CMDS.APP_CMDS.{cog}")
+            await self.bot.reload_extension(name=f"BotExtensions.{cog}")
             await interaction.response.send_message(f'{cog} cog reloaded', ephemeral=True)
             Functions.Log(0, f"[{interaction.user.name}] reloaded {cog} cog")
         else:
