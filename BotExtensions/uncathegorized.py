@@ -193,17 +193,6 @@ class Uncathegorized(commands.Cog):
             await interaction.response.send_message(f"Error: {str(e)}", ephemeral=True)
             self.Log(2, f"[{interaction.user.name}] AI command failed: {str(e)}")
 
-    # -------------------- TEST COMMAND -------------------- #
-    @app_commands.command(name="test", description="Test command")
-    async def Test(self, interaction: discord.Interaction): 
-        if interaction.user.guild_permissions.administrator: 
-            await interaction.response.send_message("Test", ephemeral=True, delete_after=5) 
-            Functions.Log(0, "Test command used") 
-            Functions.Log(1, "Test command used") 
-            Functions.Log(2, "Test command used") 
-            Functions.Log(3, "Test command used") 
-        else: 
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Uncathegorized(bot))

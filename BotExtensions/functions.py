@@ -175,6 +175,18 @@ class Functions(commands.Cog):
 
         # Check for rankup
         await self.ranks_cog.rankup(member, guild)
+
+
+    # ---------------------------
+    # Rank Checks
+    # ---------------------------
+    @staticmethod
+    def isOwner(interaction):
+        return interaction.user.id == 650748710543687735
+    
+    @staticmethod
+    def isAdmin(interaction):
+        return interaction.user.guild_permissions.administrator
 # ---------------------------
 # Setup
 # ---------------------------

@@ -5,40 +5,51 @@ from discord.ext import commands
 from discord import app_commands
 
 from BotExtensions.functions import *
+from BotExtensions.errors import *
 from BotVariables.lists import *
+
 
 class Console(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @app_commands.command(name="test", description="Test command")
+    async def Test(self, interaction: discord.Interaction): 
+        if not Functions.isOwner:
+            raise NotOwnerError()
+
+        await interaction.response.send_message("Test", ephemeral=True, delete_after=5) 
+        Functions.Log(0, "Test command used") 
+        Functions.Log(1, "Test command used") 
+        Functions.Log(2, "Test command used") 
+        Functions.Log(3, "Test command used") 
+
     @app_commands.command(name="reload", description="Reloads a cog while the bot is running. (admin command)")
-    async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','uncathegorized','voice','functions','skills','ranks','leaderboards']):
-        if interaction.user.guild_permissions.administrator:
-            await self.bot.reload_extension(name=f"BotExtensions.{cog}")
-            await interaction.response.send_message(f'{cog} cog reloaded', ephemeral=True)
-            Functions.Log(0, f"[{interaction.user.name}] reloaded {cog} cog")
-        else:
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+    async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','uncathegorized','voice','functions','skills','ranks','leaderboards','errorhandler']):
+        if not Functions.isAdmin:
+            raise NotAdminError()
+    
+        await self.bot.reload_extension(name=f"BotExtensions.{cog}")
+        await interaction.response.send_message(f'{cog} cog reloaded', ephemeral=True)
+        Functions.Log(0, f"[{interaction.user.name}] reloaded {cog} cog")
+
 
     @app_commands.command(name="shutdown", description="Shuts down the bot. (admin command)")
     async def shutdown(self, interaction: discord.Interaction):
-        if interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("Shutting down the bot", ephemeral=True)
-            Functions.Log(0, "Bot is shutting down")
-            await self.bot.close()
-            os._exit(0)
-        else:
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        if not Functions.isAdmin:
+            raise NotAdminError()
+        
+        await interaction.response.send_message("Shutting down the bot", ephemeral=True)
+        Functions.Log(0, "Bot is shutting down")
+        await self.bot.close()
+        os._exit(0)
 
     @app_commands.command(name="sql", description="Execute SQL query. (admin command)")
     async def sql(self, interaction: discord.Interaction, query: str):
         # Only allow your Discord ID
-        if interaction.user.id != 650748710543687735:
-            await interaction.response.send_message(
-                "You don't have permission to use this command.", ephemeral=True
-            )
-            return
-
+        if not Functions.isOwner(interaction):
+            raise app_commands.AppCommandError("You are not allowed to use this command!")
+        
         # Block dangerous queries
         blocked = ["drop table", "delete from levels", "vacuum"]
         if any(b in query.lower() for b in blocked):
@@ -68,6 +79,9 @@ class Console(commands.Cog):
 
     @app_commands.command(name="userlookup", description="Look up a username by ID. (admin command)")
     async def userlookup(self, interaction: discord.Interaction, id: str = None, member: discord.Member = None):
+        if not Functions.isAdmin:
+            raise NotAdminError()
+        
         if id != None:
             try:
                 id = int(id)

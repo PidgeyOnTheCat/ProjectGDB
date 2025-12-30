@@ -9,6 +9,7 @@ from colorama import Fore as f
 from BotVariables.version import botVersion
 from BotExtensions.database import Database
 
+
 # -------------------------
 # ENV SETUP
 # -------------------------
@@ -40,6 +41,7 @@ class MyBot(commands.Bot):
         # LOAD EXTENSIONS
         # -------------------------
         extensions = [
+            "BotExtensions.errorhandler",
             "BotExtensions.ranks",
             "BotExtensions.functions",
             "BotExtensions.economy",

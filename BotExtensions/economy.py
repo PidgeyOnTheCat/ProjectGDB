@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from pathlib import Path
 
 from BotExtensions.functions import *
+from BotExtensions.errors import *
 from BotVariables.lists import *
 
 # Load the environment variables
@@ -228,55 +229,55 @@ class Economy(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         guild = ctx.guild
 
-        if interaction.user.guild_permissions.administrator:
-            row = await self.bot.db.get_user(member.id, guild.id)
+        if not Functions.isAdmin:
+            raise NotAdminError()
+        
+        row = await self.bot.db.get_user(member.id, guild.id)
 
-            money = row['money']
-            bank = row['bank']
+        money = row['money']
+        bank = row['bank']
 
-            if amount <= 0:
-                await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
-            else:
-                money += amount
-                await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-                await interaction.response.send_message(f"**{member}** now has **{money}** money and {bank} money in their bank.", ephemeral=True)
-
-                Functions.Log(0, f"[{member.name}] Add money command used (admin)")
+        if amount <= 0:
+            await interaction.response.send_message("You can't give the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
         else:
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+            money += amount
+            await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
+            await interaction.response.send_message(f"**{member}** now has **{money}** money and {bank} money in their bank.", ephemeral=True)
+
+            Functions.Log(0, f"[{member.name}] Add money command used (admin)")
 
     @app_commands.command(name="removemoney", description="Take a certain amount of money from a user. (admin command)")
     async def removemoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
         ctx = await self.bot.get_context(interaction)
         guild = ctx.guild
 
-        if interaction.user.guild_permissions.administrator:
-            row = await self.bot.db.get_user(member.id, guild.id)
+        if not Functions.isAdmin:
+            raise NotAdminError()
+        
+        row = await self.bot.db.get_user(member.id, guild.id)
 
-            money = row['money']
-            bank = row['bank']
+        money = row['money']
+        bank = row['bank']
 
-            if amount <= 0:
-                await interaction.response.send_message("You can't take the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
-            else:
-                if money >= amount:
-                    money -= amount
-                else:
-                    bank_take = amount - money
-                    money = 0
-
-                    if bank >= bank_take:
-                        bank -= bank_take
-                    else:
-                        bank = 0
-                    
-                await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (money, bank, member.id, guild.id))
-                
-                await interaction.response.send_message(f"**{member}** now has **{money}** money and {bank} money in their bank.", ephemeral=True)
-
-                Functions.Log(0, f"[{member.name}] Remove money command used (admin)")
+        if amount <= 0:
+            await interaction.response.send_message("You can't take the specified amount to the person. Amount can only be a positive number.", ephemeral=True)
         else:
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+            if money >= amount:
+                money -= amount
+            else:
+                bank_take = amount - money
+                money = 0
+
+                if bank >= bank_take:
+                    bank -= bank_take
+                else:
+                    bank = 0
+                
+            await self.bot.db.execute("UPDATE levels SET money = ?, bank = ? WHERE user = ? AND guild = ?", (money, bank, member.id, guild.id))
+            
+            await interaction.response.send_message(f"**{member}** now has **{money}** money and {bank} money in their bank.", ephemeral=True)
+
+            Functions.Log(0, f"[{member.name}] Remove money command used (admin)")
 
     @app_commands.command(name="stats", description="Show a user's current statistics")
     async def stats(self, interaction: discord.Interaction, member: discord.Member = None):
@@ -436,6 +437,7 @@ class Economy(commands.Cog):
     async def on_pickpocket_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
+            Functions.Log(0, f"[{interaction.user.name}] used Pickpocket command but is on {Functions.timeConvert(error.retry_after)} cooldown")
 
     @app_commands.command(name="heist", description="Rob a user for their bank money.")
     @app_commands.checks.cooldown(1, Functions.hoursToSeconds(12), key=lambda i: (i.guild_id, i.user.id)) # 24 hour cooldown
@@ -494,6 +496,7 @@ class Economy(commands.Cog):
     async def on_heist_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
+            Functions.Log(0, f"[{interaction.user.name}] used Heist command but is on {Functions.timeConvert(error.retry_after)} cooldown")
                 
     @app_commands.command(name="work", description="Work to get money.")
     @app_commands.checks.cooldown(1, Functions.hoursToSeconds(8), key=lambda i: (i.guild_id, i.user.id))
@@ -517,6 +520,7 @@ class Economy(commands.Cog):
     async def on_work_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
+            Functions.Log(0, f"[{interaction.user.name}] used Work command but is on {Functions.timeConvert(error.retry_after)} cooldown")
 
     @app_commands.command(name="daily", description="Get your daily money bonus.")
     @app_commands.checks.cooldown(1, Functions.hoursToSeconds(24), key=lambda i: (i.guild_id, i.user.id))
@@ -540,6 +544,7 @@ class Economy(commands.Cog):
     async def on_daily_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
+            Functions.Log(0, f"[{interaction.user.name}] used Daily command but is on {Functions.timeConvert(error.retry_after)} cooldown")
 
     @app_commands.command(name="sendmoney", description="Give a user a certain amount of money.")
     @app_commands.describe(amount="How much money to send (positive number or 'all')")
