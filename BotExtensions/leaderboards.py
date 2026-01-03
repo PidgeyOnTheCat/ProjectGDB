@@ -73,7 +73,9 @@ class Leaderboards(commands.Cog):
         )
 
         # Load medal icon
-        coin_icon = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_emoji_coin_downscaled.png").resize((40, 40))
+        trophy_gold = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_gold.png").resize((80, 80))
+        trophy_silver = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_silver.png").resize((80, 80))
+        trophy_bronze = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_bronze.png").resize((80, 80))
         medal_positions = ["#FFD700", "#C0C0C0", "#CD7F32"]  # gold, silver, bronze
 
         y = 120
@@ -105,7 +107,7 @@ class Leaderboards(commands.Cog):
 
             # Medal icon for top 3
             if i <= 3:
-                bg.paste(Editor(coin_icon), (150, y + 23))
+                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (115, y + 3))
 
             # Username (move a bit right if medal)
             x_username = 200 if i <= 3 else 150
@@ -165,7 +167,9 @@ class Leaderboards(commands.Cog):
         )
 
         # Load medal icon
-        coin_icon = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_emoji_coin_downscaled.png").resize((40, 40))
+        trophy_gold = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_gold.png").resize((80, 80))
+        trophy_silver = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_silver.png").resize((80, 80))
+        trophy_bronze = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_bronze.png").resize((80, 80))
         medal_positions = ["#FFD700", "#C0C0C0", "#CD7F32"]  # gold, silver, bronze
 
         y = 120
@@ -197,7 +201,7 @@ class Leaderboards(commands.Cog):
 
             # Medal icon for top 3
             if i <= 3:
-                bg.paste(Editor(coin_icon), (150, y + 23))
+                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (115, y + 3))
 
             # Username (move a bit right if medal)
             x_username = 200 if i <= 3 else 150
@@ -257,7 +261,9 @@ class Leaderboards(commands.Cog):
         )
 
         # Load medal icon
-        coin_icon = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_emoji_coin_downscaled.png").resize((40, 40))
+        trophy_gold = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_gold.png").resize((80, 80))
+        trophy_silver = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_silver.png").resize((80, 80))
+        trophy_bronze = Image.open(rf"{BOTDATA_FILE_PATH}/Media/Images/gdb_trophy_bronze.png").resize((80, 80))
         medal_positions = ["#FFD700", "#C0C0C0", "#CD7F32"]  # gold, silver, bronze
 
         y = 120
@@ -289,7 +295,7 @@ class Leaderboards(commands.Cog):
 
             # Medal icon for top 3
             if i <= 3:
-                bg.paste(Editor(coin_icon), (150, y + 23))
+                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (115, y + 3))
 
             # Username (move a bit right if medal)
             x_username = 200 if i <= 3 else 150
