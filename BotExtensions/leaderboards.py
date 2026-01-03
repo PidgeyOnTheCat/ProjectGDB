@@ -107,7 +107,7 @@ class Leaderboards(commands.Cog):
 
             # Medal icon for top 3
             if i <= 3:
-                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (115, y + 3))
+                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (117, y + 3))
 
             # Username (move a bit right if medal)
             x_username = 200 if i <= 3 else 150
@@ -201,7 +201,7 @@ class Leaderboards(commands.Cog):
 
             # Medal icon for top 3
             if i <= 3:
-                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (115, y + 3))
+                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (117, y + 3))
 
             # Username (move a bit right if medal)
             x_username = 200 if i <= 3 else 150
@@ -295,7 +295,7 @@ class Leaderboards(commands.Cog):
 
             # Medal icon for top 3
             if i <= 3:
-                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (115, y + 3))
+                bg.paste(Editor(trophy_gold if i == 1 else trophy_silver if i == 2 else trophy_bronze), (117, y + 3))
 
             # Username (move a bit right if medal)
             x_username = 200 if i <= 3 else 150
