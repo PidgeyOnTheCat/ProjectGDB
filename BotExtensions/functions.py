@@ -163,25 +163,25 @@ class Functions(commands.Cog):
             money_gain = random.randint(20, 50)
             xp += xp_gain
             money += money_gain
-            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | message")
+            self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | message")
         elif variant == 1: # slash command
             xp_gain = random.randint(25, 40)
             money_gain = random.randint(30, 55)
             xp += xp_gain
             money += money_gain
-            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | command")
+            self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | command")
         elif variant == 2: # voice
             xp_gain = random.randint(25, 50)
             money_gain = random.randint(30, 65)
             xp += xp_gain
             money += money_gain
-            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | voice")
+            self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | voice")
         elif variant == 3: # reaction
             xp_gain = random.randint(10, 30)
             money_gain = random.randint(15, 40)
             xp += xp_gain
             money += money_gain
-            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | reaction")
+            self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | reaction")
         await self.bot.db.execute(
             "UPDATE levels SET xp = ?, money = ? WHERE user = ? AND guild = ?",
             (xp, money, member.id, guild.id)
