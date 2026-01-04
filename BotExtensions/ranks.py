@@ -18,6 +18,8 @@ class Ranks(commands.Cog):
     async def rankup(self, member, guild):
         if guild.id != 678345797330272257:
             return
+        
+        alerts_channel = self.bot.get_channel(1384275554718711858)
 
         userdata = await self.bot.db.get_user(member.id, guild.id)
         level = userdata["level"]
@@ -33,6 +35,8 @@ class Ranks(commands.Cog):
             return
 
         await member.add_roles(role)
+
+        await alerts_channel.send(f"**{member.name}** has been awarded the **{role.name}** role for reaching Level {level}!")
 
         Functions.Log(0, member.name, f"has been given the role {role.name}")
 
