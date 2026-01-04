@@ -27,7 +27,7 @@ class Console(commands.Cog):
 
     @app_commands.command(name="reload", description="Reloads a cog while the bot is running. (admin command)")
     async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','uncathegorized','voice','functions','skills','ranks','leaderboards','errorhandler']):
-        if not Functions.isAdmin:
+        if not Functions.isAdmin(interaction):
             raise NotAdminError()
     
         await self.bot.reload_extension(name=f"BotExtensions.{cog}")
@@ -37,7 +37,7 @@ class Console(commands.Cog):
 
     @app_commands.command(name="shutdown", description="Shuts down the bot. (admin command)")
     async def shutdown(self, interaction: discord.Interaction):
-        if not Functions.isAdmin:
+        if not Functions.isAdmin(interaction):
             raise NotAdminError()
         
         await interaction.response.send_message("Shutting down the bot", ephemeral=True)
@@ -80,7 +80,7 @@ class Console(commands.Cog):
 
     @app_commands.command(name="userlookup", description="Look up a username by ID. (admin command)")
     async def userlookup(self, interaction: discord.Interaction, id: str = None, member: discord.Member = None):
-        if not Functions.isAdmin:
+        if not Functions.isAdmin(interaction):
             raise NotAdminError()
         
         if id != None:

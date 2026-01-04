@@ -234,7 +234,7 @@ class Economy(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         guild = ctx.guild
 
-        if not Functions.isAdmin:
+        if not Functions.isAdmin(interaction):
             raise NotAdminError()
         
         row = await self.bot.db.get_user(member.id, guild.id)
@@ -256,7 +256,8 @@ class Economy(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         guild = ctx.guild
 
-        if not Functions.isAdmin:
+
+        if not Functions.isAdmin(interaction):
             raise NotAdminError()
         
         row = await self.bot.db.get_user(member.id, guild.id)
