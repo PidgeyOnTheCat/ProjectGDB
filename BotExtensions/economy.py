@@ -89,11 +89,12 @@ class Economy(commands.Cog):
             await message.channel.send(
                 f"{author.mention} has discovered a one in a million easter egg and gained 5 extra levels!"
             )
-            await self.f.levelup(author, guild)
-            await self.f.levelup(author, guild)
-            await self.f.levelup(author, guild)
-            await self.f.levelup(author, guild)
-            await self.f.levelup(author, guild)
+            
+            await self.f.levelup(author, guild, force=True)
+            await self.f.levelup(author, guild, force=True)
+            await self.f.levelup(author, guild, force=True)
+            await self.f.levelup(author, guild, force=True)
+            await self.f.levelup(author, guild, force=True)
 
             Functions.Log(0, author.name, f"discovered a one-in-a-million easter egg and gained 5 extra levels!")
 
@@ -131,7 +132,7 @@ class Economy(commands.Cog):
             money_required *= 50
 
         if money >= money_required:
-            await self.f.levelup(member, ctx.guild)
+            await self.f.levelup(member, ctx.guild, force=True)
 
             money -= money_required
             await self.bot.db.execute(
@@ -326,26 +327,6 @@ class Economy(commands.Cog):
             background.paste(profile, (30, 30))
 
             background.rectangle((30, 260), width=650, height=40, color="#FFFFFF", radius=22)
-
-            # 1. Create a temp layer
-            bar_layer = Image.new("RGBA", background.image.size, (0, 0, 0, 0))
-            bar_draw = Editor(bar_layer)
-
-            # 2. Draw the bar on the temp layer
-            bar_draw.bar(
-                (30, 260),
-                max_width=650,
-                height=41,
-                percentage=user_data["xp"] / (user_data["xp"] + user_data["xp_left"]) * 100,
-                color="#9323CB",
-                radius=22
-            )
-
-            # 3. Blur it
-            bar_layer = bar_layer.filter(ImageFilter.GaussianBlur(radius=6))
-
-            # 4. Paste it back
-            background.image.paste(bar_layer, (0, 0), bar_layer)
 
             background.bar(
                 (29, 260),

@@ -159,22 +159,29 @@ class Functions(commands.Cog):
 
         # Add XP / Money based on variant
         if variant == 0: # normal text message
-            xp += random.randint(15, 35)
-            money += random.randint(20, 50)
-            self.Log(0, member.name, f"got XP and money from normal message")
+            xp_gain = random.randint(15, 35)
+            money_gain = random.randint(20, 50)
+            xp += xp_gain
+            money += money_gain
+            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | message")
         elif variant == 1: # slash command
-            xp += random.randint(25, 40)
-            money += random.randint(30, 55)
-            self.Log(0, member.name, f"got XP and money from slash command")
+            xp_gain = random.randint(25, 40)
+            money_gain = random.randint(30, 55)
+            xp += xp_gain
+            money += money_gain
+            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | command")
         elif variant == 2: # voice
-            xp += random.randint(25, 50)
-            money += random.randint(30, 65)
-            self.Log(0, member.name, f"got XP and money in vc")
+            xp_gain = random.randint(25, 50)
+            money_gain = random.randint(30, 65)
+            xp += xp_gain
+            money += money_gain
+            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | voice")
         elif variant == 3: # reaction
-            xp += random.randint(10, 30)
-            money += random.randint(15, 40)
-            self.Log(0, member.name, f"got XP and money from reaction")
-
+            xp_gain = random.randint(10, 30)
+            money_gain = random.randint(15, 40)
+            xp += xp_gain
+            money += money_gain
+            self.Log(0, member.name, f" +{xp_gain} xp | +{money_gain} money | reaction")
         await self.bot.db.execute(
             "UPDATE levels SET xp = ?, money = ? WHERE user = ? AND guild = ?",
             (xp, money, member.id, guild.id)
@@ -186,7 +193,7 @@ class Functions(commands.Cog):
         else:
             return
 
-    async def levelup(self, member, guild):
+    async def levelup(self, member, guild, force=False):
         alerts_channel = self.bot.get_channel(1384275554718711858)
 
         # Fetch current stats
@@ -196,17 +203,24 @@ class Functions(commands.Cog):
         xp = userdata["xp"]
         skillpoints = userdata["skillpoints"]
 
+        xp_required = (level + 1) * 100
+
         # Level up
         level += 1
-        xp = 0
+
+        if not force:
+            xp -= xp_required
+        else:
+            xp = 0
+
         if level % 5 == 0:
             sp_gain = level // 5
             skillpoints += sp_gain
-            await alerts_channel.send(f"**{member.name}** has leveled up to **{level}** and gained **{sp_gain}** skill points!")
-            self.Log(0, f"[{member.name}] leveled up to {level} (+{sp_gain} SP)")
+            await alerts_channel.send(f"**{member.name}** leveled up to Level **{level}** and gained **{sp_gain}** skill points!")
+            self.Log(0, member.name, f"leveled up to {level} (+{sp_gain} SP)")
         else:
-            await alerts_channel.send(f"**{member.name}** has leveled up to **{level}**!")
-            self.Log(0, f"[{member.name}] leveled up to {level}")
+            await alerts_channel.send(f"**{member.name}** leveled up to Level **{level}**!")
+            self.Log(0, member.name, f"leveled up to {level}")
 
         await self.bot.db.execute(
             "UPDATE levels SET level = ?, xp = ?, skillpoints = ? WHERE user = ? AND guild = ?",
