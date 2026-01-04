@@ -216,10 +216,10 @@ class Functions(commands.Cog):
         if level % 5 == 0:
             sp_gain = level // 5
             skillpoints += sp_gain
-            await alerts_channel.send(f"**{member.name}** leveled up to Level **{level}** and gained **{sp_gain}** skill points!")
+            await alerts_channel.send(f"**{member.name}** leveled up to **Level {level}** and gained **{sp_gain}** skill points!")
             self.Log(0, member.name, f"leveled up to {level} (+{sp_gain} SP)")
         else:
-            await alerts_channel.send(f"**{member.name}** leveled up to Level **{level}**!")
+            await alerts_channel.send(f"**{member.name}** leveled up to **Level {level}**!")
             self.Log(0, member.name, f"leveled up to {level}")
 
         await self.bot.db.execute(
