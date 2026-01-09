@@ -67,7 +67,7 @@ class MyBot(commands.Bot):
         # Graceful shutdown
         if hasattr(self, "db"):
             await self.db.close()
-            print("[DB] Database closed")
+            print(f"{f.GREEN}[DB] Database closed{f.RESET}")
 
         await super().close()
 

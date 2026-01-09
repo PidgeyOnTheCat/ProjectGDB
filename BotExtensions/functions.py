@@ -43,7 +43,7 @@ class Functions(commands.Cog):
         ]
         
         if username != None:
-            print(f"[{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%d.%m.%Y')}{Fore.RESET}] [{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%H:%M:%S')}{Fore.RESET}] [ {logTypes[type]} ] [{Fore.LIGHTWHITE_EX}{username}{Fore.RESET}] {message}")
+            print(f"[{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%d.%m.%Y')}{Fore.RESET}] [{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%H:%M:%S')}{Fore.RESET}] [ {logTypes[type]} ] [{Fore.LIGHTYELLOW_EX}{username}{Fore.RESET}] {message}")
         else:
             print(f"[{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%d.%m.%Y')}{Fore.RESET}] [{Fore.LIGHTMAGENTA_EX}{dt.now().strftime('%H:%M:%S')}{Fore.RESET}] [ {logTypes[type]} ] {message}")
 
