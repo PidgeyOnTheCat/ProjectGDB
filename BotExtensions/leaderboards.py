@@ -33,9 +33,11 @@ class Leaderboards(commands.Cog):
             await self.leaderboard_nword(interaction)
         elif type == 'cocksize':
             await self.leaderboard_cocksize(interaction)
-        
         else:
             interaction.response.send_message("Invalid leaderboard type.", ephemeral=True)
+            return
+        
+        Functions.Log(0, interaction.user.name, f"used {type} leaderboard command")
 
     async def leaderboard_levels(self, interaction):
         await interaction.response.defer()

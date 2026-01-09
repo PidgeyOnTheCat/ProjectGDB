@@ -80,7 +80,7 @@ class Economy(commands.Cog):
 
             # Send warning and log
             await message.channel.send(":thumbsdown: \nNo racism!")
-            Functions.Log(0, author.name, f"said the N-word {count} time(s).")
+            Functions.Log(0, author.name, f"said the n-word {count} times")
 
         # -------------------------
         # One-in-a-million Easter Egg
@@ -96,7 +96,7 @@ class Economy(commands.Cog):
             await self.f.levelup(author, guild, force=True)
             await self.f.levelup(author, guild, force=True)
 
-            Functions.Log(0, author.name, f"discovered a one-in-a-million easter egg and gained 5 extra levels!")
+            Functions.Log(0, author.name, f"discovered a one in a million easter egg and gained 5 extra levels")
 
         # Important: let commands still work
         await self.bot.process_commands(message)
@@ -139,11 +139,11 @@ class Economy(commands.Cog):
                 "UPDATE levels SET money = ? WHERE user = ? AND guild = ?",
                 (money, member.id, ctx.guild.id)
             )
-            await ctx.send(f"You have leveled up to level {level + 1} by paying {money_required} <:gdb_emoji_coin:1376156520030404650>!", ephemeral=True)
-            Functions.Log(0, interaction.user.name, f"leveled up by paying {money_required}")
+            await interaction.response.send_message(f"You have leveled up to level {level + 1} by paying {money_required} <:gdb_emoji_coin:1376156520030404650>!", ephemeral=True)
+            Functions.Log(0, interaction.user.name, f"leveled up by paying {money_required} money")
 
         else:
-            await ctx.send(f"You don't have enough <:gdb_emoji_coin:1376156520030404650> for a levelup\nYou need {money_required} <:gdb_emoji_coin:1376156520030404650> but you only have {money} <:gdb_emoji_coin:1376156520030404650>", ephemeral=True)
+            await interaction.response.send_message(f"You don't have enough <:gdb_emoji_coin:1376156520030404650> for a levelup\nYou need {money_required} <:gdb_emoji_coin:1376156520030404650> but you only have {money} <:gdb_emoji_coin:1376156520030404650>", ephemeral=True)
 
     @app_commands.command(name="deposit",description="Deposit a certain amount of money into your bank account.")
     async def deposit(self, interaction: discord.Interaction,amount: Literal['100', '500', '1000', '5000', '10000', '50000', '100000', 'all']):
@@ -183,11 +183,11 @@ class Economy(commands.Cog):
         )
 
         # Feedback message
-        await ctx.send(
+        await interaction.response.send_message(
             f"{member.mention} has deposited {deposited} <:gdb_emoji_coin:1376156520030404650> into their bank account."
         )
 
-        Functions.Log(0, interaction.user.name, f"deposited {deposited} coins")
+        Functions.Log(0, interaction.user.name, f"deposited {deposited} money")
 
 
     @app_commands.command(name="withdraw", description="Withdraw a certain amount of money from your bank account.")
@@ -227,7 +227,7 @@ class Economy(commands.Cog):
         # Feedback message
         await ctx.send(f"{member.name} has withdrawn {withdrawn} <:gdb_emoji_coin:1376156520030404650> from their bank account.")
 
-        Functions.Log(0, interaction.user.name, f"withdrew {withdrawn} coins")
+        Functions.Log(0, interaction.user.name, f"withdrew {withdrawn} money")
 
     @app_commands.command(name="addmoney", description="Give a user a certain amount of money. (admin command)")
     async def addmoney(self, interaction: discord.Interaction, member: discord.Member, amount: int):
@@ -507,7 +507,7 @@ class Economy(commands.Cog):
     async def on_heist_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
-            Functions.Log(0, interaction.user.name, f"used Heist command but is on {Functions.timeConvert(error.retry_after)} cooldown")
+            Functions.Log(0, interaction.user.name, f"used heist command but is on {Functions.timeConvert(error.retry_after)} cooldown")
                 
     @app_commands.command(name="work", description="Work to get money.")
     @app_commands.checks.cooldown(1, Functions.hoursToSeconds(8), key=lambda i: (i.guild_id, i.user.id))
@@ -525,13 +525,13 @@ class Economy(commands.Cog):
         await interaction.response.send_message(f"{member.mention} went to work and has gained {paycheck} <:gdb_emoji_coin:1376156520030404650>.")
 
         await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-        Functions.Log(0, interaction.user.name, f"used Work command for {paycheck} money")
+        Functions.Log(0, interaction.user.name, f"used work command for {paycheck} money")
 
     @work.error
     async def on_work_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
-            Functions.Log(0, interaction.user.name, f"used Work command but is on {Functions.timeConvert(error.retry_after)} cooldown")
+            Functions.Log(0, interaction.user.name, f"used work command but is on {Functions.timeConvert(error.retry_after)} cooldown")
 
     @app_commands.command(name="daily", description="Get your daily money bonus.")
     @app_commands.checks.cooldown(1, Functions.hoursToSeconds(24), key=lambda i: (i.guild_id, i.user.id))
@@ -549,13 +549,13 @@ class Economy(commands.Cog):
         await interaction.response.send_message(f"{member.mention} has gained {dailyreward} <:gdb_emoji_coin:1376156520030404650> from their daily reward.")
 
         await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
-        Functions.Log(0, interaction.user.name, f"used Daily command for {dailyreward} money")
+        Functions.Log(0, interaction.user.name, f"used daily command for {dailyreward} money")
 
     @daily.error
     async def on_daily_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(f"Please wait {Functions.timeConvert(error.retry_after)}", ephemeral=True)
-            Functions.Log(0, interaction.user.name, f"used Daily command but is on {Functions.timeConvert(error.retry_after)} cooldown")
+            Functions.Log(0, interaction.user.name, f"used daily command but is on {Functions.timeConvert(error.retry_after)} cooldown")
 
     @app_commands.command(name="sendmoney", description="Give a user a certain amount of money.")
     @app_commands.describe(amount="How much money to send (positive number or 'all')")
@@ -620,7 +620,7 @@ class Economy(commands.Cog):
 
             await self.bot.db.execute("UPDATE levels SET money = ? WHERE user = ? AND guild = ?", (money, member.id, ctx.guild.id))
 
-            Functions.Log(0, interaction.user.name, f"used Bet command")
+            Functions.Log(0, interaction.user.name, f"used bet command")
 
 
 async def setup(bot):

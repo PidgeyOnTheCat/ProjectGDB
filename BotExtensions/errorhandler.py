@@ -47,7 +47,7 @@ async def setup(bot):
         elif isinstance(error, NotAdminError):
             Functions.Log(0, interaction.user.name, f"used '{interaction.command.name}' command but doesnt have admin permission")
         else:
-            Functions.Log(2, interaction.user.name, f"Error in '{interaction.command.name}': {error}")
+            Functions.Log(2, interaction.user.name, f"error in '{interaction.command.name}': {error}")
 
         # Notify the user
         if not interaction.response.is_done():

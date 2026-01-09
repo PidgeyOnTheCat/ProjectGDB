@@ -20,10 +20,10 @@ class Console(commands.Cog):
             raise NotOwnerError()
 
         await interaction.response.send_message("Test", ephemeral=True, delete_after=5) 
-        Functions.Log(0, interaction.user.name, "used Test command") 
-        Functions.Log(1, interaction.user.name, "used Test command") 
-        Functions.Log(2, interaction.user.name, "used Test command") 
-        Functions.Log(3, interaction.user.name, "used Test command") 
+        Functions.Log(0, interaction.user.name, "used test command") 
+        Functions.Log(1, interaction.user.name, "used test command") 
+        Functions.Log(2, interaction.user.name, "used test command") 
+        Functions.Log(3, interaction.user.name, "used test command") 
 
     @app_commands.command(name="reload", description="Reloads a cog while the bot is running. (admin command)")
     async def reload(self, interaction: discord.Interaction, cog:Literal['console','economy','moderation','uncathegorized','voice','functions','skills','ranks','leaderboards','errorhandler']):
@@ -41,7 +41,7 @@ class Console(commands.Cog):
             raise NotAdminError()
         
         await interaction.response.send_message("Shutting down the bot", ephemeral=True)
-        Functions.Log(0, interaction.user.name, "Bot is shutting down")
+        Functions.Log(0, interaction.user.name, "shut down the bot")
         await self.bot.close()
         os._exit(0)
 
@@ -72,11 +72,11 @@ class Console(commands.Cog):
                 await self.bot.db.execute(query)
                 await interaction.response.send_message("Query executed successfully.", ephemeral=True)
 
-            Functions.Log(0, interaction.user.name, f"used SQL Query: {query}")
+            Functions.Log(0, interaction.user.name, f"used sql query: {query}")
 
         except Exception as e:
             await interaction.response.send_message(f"Error executing query: {e}", ephemeral=True)
-            Functions.Log(2, interaction.user.name, f"SQL error: {e}")
+            Functions.Log(2, interaction.user.name, f"sql error: {e}")
 
     @app_commands.command(name="userlookup", description="Look up a username by ID. (admin command)")
     async def userlookup(self, interaction: discord.Interaction, id: str = None, member: discord.Member = None):

@@ -48,13 +48,13 @@ class Voice(commands.Cog):
             
         except asyncio.TimeoutError:
             await interaction.response.send_message("Connection timed out. Please try again.", ephemeral=True)
-            Functions.Log(1, None, "Connection timed out.")
+            Functions.Log(1, None, "connection timed out.")
         except discord.ClientException as e:
             await interaction.response.send_message(f"Failed to join voice channel: {str(e)}", ephemeral=True)
-            Functions.Log(2, None, f"Failed to join voice channel: {str(e)}")
+            Functions.Log(2, None, f"failed to join voice channel: {str(e)}")
         except Exception as e:
             await interaction.response.send_message(f"An unexpected error occurred: {str(e)}", ephemeral=True)
-            Functions.Log(2, None, f"An unexpected error occurred: {str(e)}")
+            Functions.Log(2, None, f"an unexpected error occurred: {str(e)}")
 
     @app_commands.command(name="disconnect", description="Leaves the voice call.")
     async def disconnect(self, interaction: discord.Interaction):
@@ -108,7 +108,7 @@ class Voice(commands.Cog):
             Functions.Log(0, interaction.user.name, f"playing {sound}.")
         except Exception as e:
             await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
-            Functions.Log(2, interaction.user.name, f"An error occurred: {str(e)}")
+            Functions.Log(2, interaction.user.name, f"an error occurred: {str(e)}")
 
     @soundboard.autocomplete("sound")
     async def soundboard_autocomplete(

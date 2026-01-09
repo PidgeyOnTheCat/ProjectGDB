@@ -25,28 +25,28 @@ class Uncathegorized(commands.Cog):
     @app_commands.command(name="hello", description="Says hi and mentions the user.")
     async def Hello(self, interaction: discord.Interaction):
         await interaction.response.send_message(f'Hi {interaction.user.mention}! <:gdb_emoji_logo:1264147234983776297>', ephemeral=True)
-        Functions.Log(0, interaction.user.name, f"used Hello command")
+        Functions.Log(0, interaction.user.name, f"used hello command")
 
     @app_commands.command(name="ping", description="Responds with Pong.")
     async def Ping(self, interaction: discord.Interaction):
         await interaction.response.send_message('Pong!', ephemeral=True)
-        Functions.Log(0, interaction.user.name, f"used Ping command")
+        Functions.Log(0, interaction.user.name, f"used ping command")
 
     @app_commands.command(name="version", description="Responds with the bot version.")
     async def Version(self, interaction: discord.Interaction):
         await interaction.response.send_message(f'Bot Version: {botVersion}', ephemeral=True)
-        Functions.Log(0, interaction.user.name, f"used Version command")
+        Functions.Log(0, interaction.user.name, f"used version command")
 
     @app_commands.command(name="say", description="Says what you want it to say.")
     async def Say(self, interaction: discord.Interaction, message: str):
         await interaction.response.send_message(message)
-        Functions.Log(0, interaction.user.name, f"used Say command with message: {message}")
+        Functions.Log(0, interaction.user.name, f"used say command with message: {message}")
 
     @app_commands.command(name="roll", description="Rolls a number from 1 to 6")
     async def Roll(self, interaction: discord.Interaction):
         roll_result = random.randint(1, 6)
         await interaction.response.send_message(f'{roll_result}')
-        Functions.Log(0, interaction.user.name, f"used Roll command: {roll_result}")
+        Functions.Log(0, interaction.user.name, f"used roll command: {roll_result}")
 
     # -------------------- FUN COMMANDS -------------------- #
     @app_commands.command(name="kys", description="Send a death threat to someone :D")
@@ -57,30 +57,30 @@ class Uncathegorized(commands.Cog):
             content += f"\n{message}"
         content += "\n:regional_indicator_f::regional_indicator_r::fire:"
         await interaction.response.send_message(content)
-        Functions.Log(0, interaction.user.name, f"used KYS command on {user.name}")
+        Functions.Log(0, interaction.user.name, f"used kys command on {user.name}")
 
     @app_commands.command(name="leak", description="Leak somebody's IP address for fun (not real)")
     async def Leak(self, interaction: discord.Interaction, user: discord.Member):
         ip_address = ".".join(str(random.randint(0, 255)) for _ in range(4))
         await interaction.response.send_message(content=f'{ip_address}\n{user.mention}, is this you?')
-        Functions.Log(0, interaction.user.name, f"used Leak command on {user.name}")
+        Functions.Log(0, interaction.user.name, f"used leak command on {user.name}")
 
     @app_commands.command(name="funny", description="Send a funny meme.")
     async def Funny(self, interaction: discord.Interaction):
         await interaction.response.send_message("https://i.pinimg.com/736x/61/10/99/6110992c09e040f45ee0fd15c88bb91e.jpg")
-        Functions.Log(0, interaction.user.name, f"used Funny command")
+        Functions.Log(0, interaction.user.name, f"used funny command")
 
     @app_commands.command(name="coinflip", description="Flip a coin.")
     async def Coinflip(self, interaction: discord.Interaction):
         result = "Heads" if random.randint(1, 2) == 1 else "Tails"
         await interaction.response.send_message(result)
-        Functions.Log(0, interaction.user.name, f"used Coinflip command: {result}")
+        Functions.Log(0, interaction.user.name, f"used coinflip command: {result}")
 
     @app_commands.command(name="choose", description="Chooses one of 2 things.")
     async def Choose(self, interaction: discord.Interaction, thing1: str, thing2: str):
         choice = thing1 if random.randint(1, 2) == 1 else thing2
         await interaction.response.send_message(f"I choose {choice}.")
-        Functions.Log(0, interaction.user.name, f"used Choose command: {choice}")
+        Functions.Log(0, interaction.user.name, f"used choose command: {choice}")
 
     # -------------------- SOCIAL COMMANDS -------------------- #
     @app_commands.command(name="socials", description="Sends PidgeyCat's socials.")
@@ -90,7 +90,7 @@ class Uncathegorized(commands.Cog):
             "Follow on Instagram: https://www.instagram.com/pidgeycat\n"
             "Listen to Spotify playlist: https://open.spotify.com/playlist/7DXCaWLuYiPpOc8sBnEhM8?si=5b9f944a15be4932"
         )
-        Functions.Log(0, interaction.user.name, f"used Socials command")
+        Functions.Log(0, interaction.user.name, f"used socials command")
 
     @app_commands.command(name="csfinder", description="Finds a Counter-Strike 2 account.")
     async def CSFinder(self, interaction: discord.Interaction, steamid: str):
@@ -99,10 +99,10 @@ class Uncathegorized(commands.Cog):
             faceit_url = f'https://faceitfinder.com/profile/{steamid64}'
             leetify_url = f'https://leetify.com/app/profile/{steamid64}'
             await interaction.response.send_message(f"SteamID64: `{steamid64}`\n[Faceit Profile]({faceit_url})\n[Leetify Profile]({leetify_url})")
-            Functions.Log(0, interaction.user.name, f"used CSFinder command: {steamid64}")
+            Functions.Log(0, interaction.user.name, f"used csfinder command: {steamid64}")
         else:
             await interaction.response.send_message("Failed to resolve SteamID64.", ephemeral=True)
-            Functions.Log(2, interaction.user.name, f"CSFinder failed to resolve SteamID64: {steamid}")
+            Functions.Log(2, interaction.user.name, f"csfinder failed to resolve steamID64: {steamid}")
 
     @app_commands.command(name="nword", description="Shows how many times a user has said the N-Word.")
     async def nword(self, interaction: discord.Interaction, member: discord.Member = None):
@@ -114,7 +114,7 @@ class Uncathegorized(commands.Cog):
 
         await interaction.response.send_message(f"{member.mention} has said the N-word **{userdata['nword']}** times")
 
-        Functions.Log(0, interaction.user.name, f"checked N-word count: {userdata['nword']}")
+        Functions.Log(0, interaction.user.name, f"checked n-word count: from {member.name}: {userdata['nword']}")
 
     # -------------------- TRUTH/DARE/WYR -------------------- #
     async def _send_tdw(self, interaction: discord.Interaction, type_: str):
@@ -168,7 +168,7 @@ class Uncathegorized(commands.Cog):
         insult = Functions.get_insult()
         target = user.mention if mention else user.name
         await interaction.response.send_message(f"{target}, {insult}")
-        Functions.Log(0, interaction.user.name, f"used Roast command on {user.name}")
+        Functions.Log(0, interaction.user.name, f"used roast command on {user.name}")
 
     # -------------------- AI COMMAND -------------------- #
     @app_commands.command(name="ai", description="Prompt AI.")
@@ -184,10 +184,10 @@ class Uncathegorized(commands.Cog):
             )
             response = chat_completion.choices[0].message.content
             await interaction.response.send_message(f"**{interaction.user.name} prompted:** *{prompt}*\n{response}")
-            Functions.Log(0, interaction.user.name, f"used AI command with prompt: {prompt}")
+            Functions.Log(0, interaction.user.name, f"used ai command with prompt: {prompt}")
         except Exception as e:
             await interaction.response.send_message(f"Error: {str(e)}", ephemeral=True)
-            Functions.Log(2, interaction.user.name, f"AI command failed: {str(e)}")
+            Functions.Log(2, interaction.user.name, f"ai command failed: {str(e)}")
 
 
 async def setup(bot):
