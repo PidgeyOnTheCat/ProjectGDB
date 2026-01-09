@@ -1,1 +1,1 @@
-botVersion = "0.8.2"
+botVersion = "pre0.9.0"
