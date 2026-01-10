@@ -54,6 +54,7 @@ class MyBot(commands.Bot):
             "BotExtensions.chatcommands",
             "BotExtensions.leaderboards",
             "BotExtensions.skills",
+            # "BotExtensions.website",
         ]
 
         for ext in extensions:
