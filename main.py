@@ -86,6 +86,10 @@ bot = MyBot(command_prefix=">", intents=intents)
 @bot.event
 async def on_ready():
     try:
+        # Start XP task 1
+        functions = bot.get_cog("Functions")
+        print(f"{f.GREEN}[EXT] XP task started{f.RESET}")
+
         synced = await bot.tree.sync()
         print("---------------------------------")
         print(f"Successfully synced {len(synced)} commands.")
@@ -94,6 +98,9 @@ async def on_ready():
             f"Bot version: {botVersion}\n"
             "_________________________________"
         )
+
+        # Start XP task 2
+        functions.update_xp.start()
     except Exception as e:
         print("Failed to sync commands:", e)
 

@@ -122,7 +122,7 @@ class Economy(commands.Cog):
         money = userdata['money']
         xp = userdata['xp']
 
-        xp_required = (level + 1) * 100
+        xp_required = (level + 1) * 250
         money_required = xp_required - xp
 
         # Make it cost 5 times more money to level up past lvl 100
@@ -302,7 +302,7 @@ class Economy(commands.Cog):
             skillpoints = row['skillpoints']
 
             # Calculate XP left for next level
-            xp_required = (level + 1) * 100
+            xp_required = (level + 1) * 250
             xp_left = xp_required - xp
 
             user_data = {

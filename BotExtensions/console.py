@@ -105,5 +105,25 @@ class Console(commands.Cog):
         else:
             await interaction.response.send_message("No id or user given", ephemeral=True)
 
+    @app_commands.command(name="testmute", description="test if user is muted.")
+    async def testmute(self, interaction: discord.Interaction, member: discord.Member):
+        if not Functions.isAdmin(interaction):
+            raise NotAdminError()
+        
+        if member.voice is None:
+            await interaction.response.send_message("User is not in a voice channel.", ephemeral=True)
+            return
+        
+        is_silenced = any([
+            member.voice.self_mute, 
+            member.voice.mute, 
+            member.voice.self_deaf, 
+            member.voice.deaf,
+            member.voice.afk
+        ])
+
+        await interaction.response.send_message(f"is silenced: {is_silenced}", ephemeral=True)
+
+        Functions.Log(0,member.name, f"tested mute status of {member.name} {is_silenced}")
 async def setup(bot):
     await bot.add_cog(Console(bot))

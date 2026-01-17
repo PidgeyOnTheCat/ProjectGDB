@@ -27,9 +27,6 @@ class Functions(commands.Cog):
         # Get the ranks cog instance
         self.ranks_cog = self.bot.get_cog("Ranks")
 
-        # Start XP task
-        self.update_xp.start()
-
     # ---------------------------
     # Logging
     # ---------------------------
@@ -137,13 +134,22 @@ class Functions(commands.Cog):
     # ---------------------------
     # XP Task
     # ---------------------------
-    @tasks.loop(minutes=1.0)
+    @tasks.loop(minutes=1)
     async def update_xp(self):
         for guild in self.bot.guilds:
             for channel in guild.voice_channels:
                 for member in channel.members:
                     if not member.bot:
-                        await self.give_xp(member, guild, 2)
+                        is_silenced = any([
+                            member.voice.self_mute, 
+                            member.voice.mute, 
+                            member.voice.self_deaf, 
+                            member.voice.deaf,
+                            member.voice.afk
+                        ])
+
+                        if not is_silenced:
+                            await self.give_xp(member, guild, 2)
 
     # ---------------------------
     # Give XP / Money
@@ -159,26 +165,26 @@ class Functions(commands.Cog):
 
         # Add XP / Money based on variant
         if variant == 0: # normal text message
-            xp_gain = random.randint(15, 35)
+            xp_gain = random.randint(50, 100) # avg 75
             money_gain = random.randint(20, 50)
             xp += xp_gain
             money += money_gain
             self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | message")
         elif variant == 1: # slash command
-            xp_gain = random.randint(25, 40)
+            xp_gain = random.randint(90, 140) # avg 115
             money_gain = random.randint(30, 55)
             xp += xp_gain
             money += money_gain
             self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | command")
         elif variant == 2: # voice
-            xp_gain = random.randint(25, 50)
+            xp_gain = random.randint(25, 50) # avg 37.5
             money_gain = random.randint(30, 65)
             xp += xp_gain
             money += money_gain
             self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | voice")
         elif variant == 3: # reaction
-            xp_gain = random.randint(10, 30)
-            money_gain = random.randint(15, 40)
+            xp_gain = random.randint(90, 120)  # avg 105
+            money_gain = random.randint(25, 45)
             xp += xp_gain
             money += money_gain
             self.Log(0, member.name, f"+{xp_gain} xp | +{money_gain} money | reaction")
@@ -187,7 +193,7 @@ class Functions(commands.Cog):
             (xp, money, member.id, guild.id)
         )
 
-        xp_required = (level + 1) * 100
+        xp_required = (level + 1) * 250
         if xp >= xp_required:
             await self.levelup(member, guild)
         else:
@@ -203,7 +209,7 @@ class Functions(commands.Cog):
         xp = userdata["xp"]
         skillpoints = userdata["skillpoints"]
 
-        xp_required = (level + 1) * 100
+        xp_required = (level + 1) * 250
 
         # Level up
         level += 1
